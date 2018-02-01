@@ -1,4 +1,6 @@
 
+#define grade 5                     /* grade for array */
+#define measure_num 1<<grade        /* number of consequential measurments */
 
 void InitApp(void);                 /* I/O and Peripheral Initialization */
 void irq_tmr3(void);                /* timer 3 irq handler */
@@ -26,3 +28,15 @@ unsigned long sumarr(unsigned long arr[]);
 void InterruptHandlerHigh (void);
 
 unsigned int norm_num;
+unsigned long PER0 = 0;                     // buffer #1 for active measurment
+unsigned long PER1[measure_num] = {0};
+unsigned long PER2 = 0;                     // sum of 8 measurments
+unsigned long RESLT = 0;                    // normal result of 8 measures
+char ACTV = 0b0;                            // controller state
+int mes_num    = 0;                         // number of measurments
+int arr_num = 767;                          // array index for measured flow table
+unsigned int prev_norm_num = 0;
+unsigned long *arr_p;// = meash_arr;
+unsigned char led_state = 0;
+unsigned char ADCStatus = 0;
+unsigned int ADCData = 0;
