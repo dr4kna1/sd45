@@ -1,0 +1,15 @@
+build/
+dist/
+debug/
+*.o
+*.elf
+*.map
+*.d
+*.bak
+**/nbproject/private
+**/nbproject/Makefile-*
+**/nbproject/Package-*
+**/.mhc_backup
+**/*.X/debug
+**/*.X/dist
+**/*.X/build
