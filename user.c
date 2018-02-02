@@ -207,7 +207,7 @@ void measure(void)
 //            }
 
             PER2 = sumarr(PER1);
-            PER2 = PER2>>3;             // divide by 8
+            PER2 = PER2>>grade;             // divide by grade
 //            PER2 = PER1[4];
             RESLT = PER2;
             PER2 = 0;                   // reset buffer
