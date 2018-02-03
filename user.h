@@ -1,5 +1,5 @@
 
-#define grade 5                     /* grade for array */
+#define grade 3                     /* grade for array */
 #define measure_num 1<<grade        /* number of consequential measurments */
 
 void InitApp(void);                 /* I/O and Peripheral Initialization */

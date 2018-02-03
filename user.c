@@ -178,7 +178,7 @@ void irq_tmr1()
    PIR1bits.TMR1IF = 0;
    TMR1H = 0xFE;
    TMR1L = 0x00;
-   led_state++;
+ //  led_state++;
 
    fAUTO = AUTO;
    fDOWN = DOWN;
@@ -296,6 +296,8 @@ void lit_led(unsigned int str1,unsigned int str2)
         }
         else
             led_state = 0;
+    
+       led_state++;
 }
 
 /* Decode hex int to 7-seg digit*/

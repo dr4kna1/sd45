@@ -60,6 +60,7 @@ void main(void)
                 ROM_WR(0x10,norm_num);
         }
         prev_norm_num = norm_num;
+        lit_led(norm_arr[norm_num],rate_arr[arr_num]);
         drive_pump(pwm_p,per_pwm_p);
 //        prc_SPI();                                     // there should be SPI task to query ADC
     }
@@ -77,11 +78,9 @@ void interrupt sys_irq (void)
       irq_ccp2();                                   // timer3 capture with event
 
   }
-  // TODO try to drive LEDs without timer
   else if (PIR1bits.TMR1IF)                         // main timer, drives leds
   {
      irq_tmr1();
-     lit_led(norm_arr[norm_num],rate_arr[arr_num]);
      indAUTO     = mode_AUTO;
      indMANUAL   = mode_MAN;
      indSET      = mode_SET;
