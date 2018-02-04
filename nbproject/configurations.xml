@@ -8,6 +8,7 @@
       <itemPath>macros.h</itemPath>
       <itemPath>system.h</itemPath>
       <itemPath>user.h</itemPath>
+      <itemPath>tables.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"
