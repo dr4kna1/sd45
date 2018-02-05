@@ -379,10 +379,11 @@ void prcd_but(void)
     {
         if(mode_SET)
         {
-            norm_num--;
             pwm_state = 0;
             if(norm_num <= 0)
                 norm_num = 0;
+            else
+                norm_num--;
         }
     }
     prev_DOWN = fDOWN;
@@ -419,6 +420,7 @@ void drive_pump( unsigned int *num,  unsigned long *table)
 
     if(mode_AUTO || mode_MAN)
     {
+        TRISCbits.RC2 = 0;                          // set PWM output
         CCP1CONbits.DC1B = 0b11;                    // 2 LSB of CCP1 reg = 3, so we have 8 bit DUTY_CYCLE resolution
         PR2 = 0xFF;                                 // max tmr2 period (485HZ @ 8MHz)
         T2CONbits.TMR2ON = 1;                       // start tmr2
@@ -463,11 +465,11 @@ void drive_pump( unsigned int *num,  unsigned long *table)
                 }
             }
         }
-
     }
     else
     {
-        CCP1CONbits.CCP1M = 0x0;
+        TRISCbits.RC2 = 1;          // set PWM as input to disable pin
+        CCP1CONbits.CCP1M = 0x0;    // disable PWM module
         T2CONbits.TMR2ON = 0;
         pwm_state = 0;
     }
