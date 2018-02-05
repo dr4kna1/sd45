@@ -21,6 +21,8 @@ extern "C" {
 
 #endif	/* TABLES_H */
 
+#define PWM_capacity 8
+
 /* 71 meaningfull PWM period points which correspond actual flow on pump, 
  gathered by in-field measurment;
  period dimensioned in tmr3 ticks */
@@ -100,6 +102,7 @@ unsigned long per_pwm_arr[71] = {
 
  unsigned long *per_pwm_p = per_pwm_arr;
  
+#if PWM_capacity == 8
  /* Duty cycle of PWM */
  unsigned int pwm_arr[71] = {
 229,
@@ -174,6 +177,81 @@ unsigned long per_pwm_arr[71] = {
 39 ,
 36
 };
+#elif PWM_capacity == 10
+ unsigned int pwm_arr[71] = {
+ 916,
+908,
+896,
+884,
+872,
+864,
+852,
+840,
+828,
+820,
+820,
+808,
+796,
+776,
+784,
+752,
+740,
+732,
+740,
+736,
+720,
+708,
+676,
+676,
+652,
+644,
+632,
+620,
+608,
+600,
+588,
+576,
+564,
+556,
+544,
+532,
+520,
+508,
+500,
+488,
+476,
+468,
+456,
+444,
+432,
+424,
+412,
+400,
+388,
+376,
+368,
+356,
+344,
+332,
+324,
+312,
+300,
+288,
+280,
+268,
+256,
+248,
+236,
+224,
+212,
+204,
+192,
+180,
+172,
+156,
+144
+ };
+#endif
  
  unsigned int *pwm_p = pwm_arr;
  

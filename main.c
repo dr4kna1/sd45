@@ -40,8 +40,7 @@ void main(void)
 
     InitApp();
     initSPI();
-//    norm_num = ROM_RD(0x10);                          // FIXME recover flow rate from ROM
-    norm_num = 0x14;                                    // we'll start from 2.5 l/m
+    norm_num = ROM_RD(0x10);                          // FIXME recover flow rate from ROM
     mode_MAN = 0;                                       // Init main control modes
     mode_AUTO = 0;
     mode_SET = 0;
@@ -81,9 +80,6 @@ void interrupt sys_irq (void)
   else if (PIR1bits.TMR1IF)                         // main timer, drives leds
   {
      irq_tmr1();
-     indAUTO     = mode_AUTO;
-     indMANUAL   = mode_MAN;
-     indSET      = mode_SET;
   }
   else if (PIR1bits.SSPIF)
   {

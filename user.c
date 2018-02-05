@@ -97,7 +97,7 @@ void InitApp(void)
     INTCONbits.TMR0IE = 0;      // TMR0 intr
 
     INTCONbits.TMR0IE = 0;      // irq TMR0
-    PIE1bits.TMR1IE = 1;
+    PIE1bits.TMR1IE = 0;
     PIE2bits.TMR3IE = 1;            // irq enabled
 
     PIE2bits.CCP2IE = 1;            // enable irq CCP2
@@ -114,7 +114,7 @@ void InitApp(void)
     T1CONbits.T1CKPS = 0b11;	// prescaler
     T1CONbits.T1OSCEN = 0;		// osc off
     T1CONbits.TMR1CS = 0;		// internal clk Fosc/4
-    T1CONbits.TMR1ON = 1;       // on
+    T1CONbits.TMR1ON = 0;       // 1 = on
 
     /* Timer2 */
     T2CON = 0b01111011;     // set prescale and postscale tmr2
@@ -152,7 +152,9 @@ void irq_tmr3(void)
 /* Capture event on input and load TMR3 value */
 void irq_ccp2(void)
 {
+    //clear CCP2 irq flag
     PIR2bits.CCP2IF = 0;
+
     if((mes_num) > 0)
     {
         ACTV = 1;
@@ -191,21 +193,14 @@ void irq_tmr1()
 
 void measure(void)
 {
-    if(mes_num==9)
+    if(mes_num == (measure_num + 1))
         {
         int k = 0;
+        // disable irqs, as we don't need new data in PER1
             PIE2bits.TMR3IE = 0;
             PIE2bits.CCP2IE = 0;
             f_measured = 1;
             ACTV = 0;
-//            PER2 = PER1[0]+PER1[1]+PER1[2]+PER1[3]+PER1[4]+PER1[5]+PER1[6]+PER1[7];
-//            k=0;
-//            while(k<8)
-//            {
-//                PER2 = PER2 + PER1[k];
-//                k++;
-//            }
-
             PER2 = sumarr(PER1);
             PER2 = PER2>>grade;             // divide by grade
 //            PER2 = PER1[4];
@@ -213,7 +208,7 @@ void measure(void)
             PER2 = 0;                   // reset buffer
 
             k = 0;
-             while(k<8)                 // reset buffer per1
+             while(k < measure_num)                 // reset buffer per1
             {
                 PER1[k] = 0;
                 k++;
@@ -221,7 +216,7 @@ void measure(void)
 
             mes_num = 0;                // end measurment session
 
-
+            // return back irqs
             PIE2bits.TMR3IE = 1;
             PIE2bits.CCP2IE = 1;
         }
@@ -271,6 +266,12 @@ void prcd_led6(void)
 void lit_led(unsigned int str1,unsigned int str2)
 {
     int nstr;
+    // light up modes LEDs
+    indAUTO     = mode_AUTO;
+    indMANUAL   = mode_MAN;
+    indSET      = mode_SET;
+
+    // 7-seg LEDs
     if(led_state < 7)
         {
             PORTD = 0xFF;
@@ -353,6 +354,13 @@ void prcd_but(void)
 
     const int ps = 200;
     const int ts = 200;
+
+    fAUTO = AUTO;
+    fDOWN = DOWN;
+    fMAN  = MANUAL;
+    fUP   = UP;
+    fSET  = SET;
+
     indUP = !fUP;
     if(fUP > prev_UP)
     {
