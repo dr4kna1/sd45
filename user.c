@@ -20,6 +20,8 @@
 #include "user.h"
 #include "macros.h"
 
+#define PWM_capacity 10              /* PWM bit range accuracy */
+
 unsigned int i=0;
 unsigned int j = 1;
 unsigned char ki = 0;
@@ -413,9 +415,9 @@ void prcd_but(void)
 
 }
 
+#if PWM_capacity == 8
 void drive_pump( unsigned int *num,  unsigned long *table)
 {
-
     const unsigned char ps = 1;//60;
 
     if(mode_AUTO || mode_MAN)
@@ -473,8 +475,78 @@ void drive_pump( unsigned int *num,  unsigned long *table)
         T2CONbits.TMR2ON = 0;
         pwm_state = 0;
     }
-
 }
+#elif PWM_capacity == 10
+void drive_pump( unsigned int *num,  unsigned long *table)
+{
+    const unsigned char ps = 1;//60;
+    unsigned int norma_10b = 916;
+
+    if(mode_AUTO || mode_MAN)
+    {
+        TRISCbits.RC2 = 0;                          // set PWM output
+        CCP1CONbits.DC1B = 0b11;                    // 2 LSB of CCP1 reg = 3, so we have 8 bit DUTY_CYCLE resolution
+        PR2 = 0xFF;                                 // max tmr2 period (485HZ @ 8MHz)
+        T2CONbits.TMR2ON = 1;                       // start tmr2
+        CCP1CONbits.CCP1M = 0xF;                    // enable PWM on CCP1
+
+        if(pwm_state == 0)                          // if new norm_rate set
+        {
+            norma_10b = num[norm_num];
+            CCP1CONbits.DC1B = norma_10b & 0b11;    // Set LSb[1:0] of PWM DUTY_CYCLE by masking 2 lower bits of table value
+            CCPR1L = norma_10b>>2;                  // then set MSb[9:2] of DUTY_CYCLE from table
+            pwm_state = 1;                          // next DC from compare RESLT and table per_pwm_arr
+        }
+        else if(pwm_state == 1)
+        {
+            if(RESLT >= table[0])
+            {
+                pwm_state = 0;
+                norma_10b = num[norm_num];
+                CCP1CONbits.DC1B = norma_10b & 0b11;
+                CCPR1L = norma_10b>>2;
+            }
+            if(f_measured == 1)
+            {
+                f_measured = 0;
+                if(RESLT > table[norm_num])
+                {
+                    ki++;
+                    if(ki == ps)
+                    {
+                        norma_10b--;
+                        if(norma_10b <= 200)
+                            norma_10b = 200;
+                        CCP1CONbits.DC1B = norma_10b & 0b11;
+                        CCPR1L = norma_10b>>2;
+                        ki = 0;
+                    }
+                }
+                else if(RESLT < table[norm_num] )   // measured period smaller => flow grater then desired
+                {
+                    ki++;
+                    if(ki == ps)
+                    {
+                        norma_10b++;
+                        if(norma_10b > 920)
+                            norma_10b = 920;
+                        CCP1CONbits.DC1B = norma_10b & 0b11;
+                        CCPR1L = norma_10b>>2;
+                        ki = 0;
+                    }
+                }
+            }
+        }
+    }
+    else
+    {
+        TRISCbits.RC2 = 1;          // set PWM as input to disable pin
+        CCP1CONbits.CCP1M = 0x0;    // disable PWM module
+        T2CONbits.TMR2ON = 0;
+        pwm_state = 0;
+    }
+}
+#endif
 
 void ROM_WR(unsigned int adr, unsigned int data)
 {

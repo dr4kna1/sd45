@@ -21,7 +21,7 @@ extern "C" {
 
 #endif	/* TABLES_H */
 
-#define PWM_capacity 8
+#define PWM_capacity 8              /* PWM bit range accuracy */
 
 /* 71 meaningfull PWM period points which correspond actual flow on pump, 
  gathered by in-field measurment;
