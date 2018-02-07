@@ -363,13 +363,13 @@ void prcd_but(void)
     const int ts = 200;
 
     fAUTO = AUTO;
-    fDOWN = DOWN;
+//    fDOWN = DOWN;
     fMAN  = MANUAL;
     fUP   = UP;
     fSET  = SET;
-    
-    fUP = btn_debounce(fUP,fUP_cnt);
-    indUP = fUP;
+
+//    fUP = btn_debounce(fUP,fUP_cnt);
+    indUP = !fUP;
     if(fUP > prev_UP)
     {
         if(mode_SET)
@@ -382,8 +382,8 @@ void prcd_but(void)
     }
     prev_UP = fUP;
 /*-----------------------------------------------------------------------*/
-//    fDOWN = btn_debounce(fDOWN,fDOWN_cnt);
-    indDOWN = !fDOWN;
+    fDOWN = btn_debounce(~DOWN,(char *)&fDOWN_cnt);
+    indDOWN = fDOWN;
     if(fDOWN > prev_DOWN)
     {
         if(mode_SET)
@@ -594,18 +594,19 @@ unsigned char ROM_RD(unsigned char adr)
     return EEDATA;       // return data
 }
 
-char btn_debounce(unsigned char button, unsigned char cnt)
-{
-    if (button)
-        cnt++;
+char btn_debounce(unsigned char button, unsigned char *cnt)
+{   
+    unsigned char rnge = 0x8;
+    if (button & 1)
+        *cnt += 1;
     else
     {
-        cnt = 0;
+        *cnt = 0;
         return 0;
     }
-    if(cnt > 8)
+    if(*cnt > rnge)
     {
-        cnt = 0;
+        *cnt = 0;
         return 1;
     }
     return 0;

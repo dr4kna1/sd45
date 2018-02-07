@@ -26,7 +26,7 @@ int decode_str(int str);
 int binarySearch( unsigned long *tab1, unsigned long key, int high, int low);
 unsigned long sumarr(unsigned long arr[]);
 void InterruptHandlerHigh (void);
-char btn_debounce(unsigned char button, unsigned char cnt);
+char btn_debounce(unsigned char button, unsigned char *cnt);
 
 unsigned int norm_num;
 unsigned long PER0 = 0;                     // buffer #1 for active measurment
