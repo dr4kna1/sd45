@@ -55,6 +55,11 @@ unsigned char prev_MAN = 1;
 extern unsigned char fAUTO;
 unsigned char prev_AUTO = 1;
 
+unsigned char fUP_cnt = 0;
+unsigned char fDOWN_cnt = 0;
+unsigned char fSET_cnt = 0;
+unsigned char fMAN_cnt = 0;
+unsigned char fAUTO_cnt = 0;
                                 //0    1    2    3    4    5    6    7    8    9
 const unsigned int digit[10] = {0x20,0x79,0x44,0x50,0x19,0x12,0x02,0x38,0x00,0x10};
 extern const unsigned int pwm_arr[71];
@@ -362,8 +367,9 @@ void prcd_but(void)
     fMAN  = MANUAL;
     fUP   = UP;
     fSET  = SET;
-
-    indUP = !fUP;
+    
+    fUP = btn_debounce(fUP,fUP_cnt);
+    indUP = fUP;
     if(fUP > prev_UP)
     {
         if(mode_SET)
@@ -376,6 +382,7 @@ void prcd_but(void)
     }
     prev_UP = fUP;
 /*-----------------------------------------------------------------------*/
+//    fDOWN = btn_debounce(fDOWN,fDOWN_cnt);
     indDOWN = !fDOWN;
     if(fDOWN > prev_DOWN)
     {
@@ -391,6 +398,7 @@ void prcd_but(void)
     prev_DOWN = fDOWN;
 
 /*-----------------------------------------------------------------------*/
+//    fSET = btn_debounce(fSET,fSET_cnt);
     if(fSET > prev_SET)
     {
         mode_SET = !mode_SET;
@@ -398,6 +406,7 @@ void prcd_but(void)
     }
     prev_SET = fSET;
 /*-----------------------------------------------------------------------*/
+//    fAUTO = btn_debounce(fAUTO,fAUTO_cnt);
     if(fAUTO > prev_AUTO)
     {
         mode_AUTO = !mode_AUTO;
@@ -405,14 +414,13 @@ void prcd_but(void)
     }
     prev_AUTO = fAUTO;
 /*-----------------------------------------------------------------------*/
+//    fMAN = btn_debounce(fMAN,fMAN_cnt);
     if(fMAN > prev_MAN)
     {
         mode_MAN = !mode_MAN;
         mode_AUTO = 0;
     }
     prev_MAN = fMAN;
-
-
 }
 
 #if PWM_capacity == 8
@@ -584,4 +592,21 @@ unsigned char ROM_RD(unsigned char adr)
     EECON1bits.CFGS = 0; // 0 = Access Flash program or DATA EEPROM memory
     EECON1bits.RD   = 1; // EEPROM Read
     return EEDATA;       // return data
+}
+
+char btn_debounce(unsigned char button, unsigned char cnt)
+{
+    if (button)
+        cnt++;
+    else
+    {
+        cnt = 0;
+        return 0;
+    }
+    if(cnt > 8)
+    {
+        cnt = 0;
+        return 1;
+    }
+    return 0;
 }
