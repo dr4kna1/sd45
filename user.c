@@ -19,8 +19,7 @@
 
 #include "user.h"
 #include "macros.h"
-
-#define PWM_capacity 10              /* PWM bit range accuracy */
+#include "tables.h"
 
 unsigned int i=0;
 unsigned int j = 1;
@@ -37,11 +36,11 @@ extern char mode_SET;
 
 extern int mes_num ;
 extern char ACTV;
-//extern int norm_num;
 
 unsigned int string = 0x0;
 unsigned int dig_i = 0;
 unsigned char flash = 0;
+unsigned int norma_10b = 916;
 
 extern unsigned char f_measured;
 extern unsigned char fUP;
@@ -57,9 +56,6 @@ unsigned char prev_AUTO = 1;
 
                                 //0    1    2    3    4    5    6    7    8    9
 const unsigned int digit[10] = {0x20,0x79,0x44,0x50,0x19,0x12,0x02,0x38,0x00,0x10};
-extern const unsigned int pwm_arr[71];
-extern const  unsigned int rate_arr[768];
-extern const  unsigned long meash_arr[768];
 unsigned int ioch_reg = 0;
 extern unsigned char state_up ;
 extern unsigned char auto_state;
@@ -480,7 +476,6 @@ void drive_pump( unsigned int *num,  unsigned long *table)
 void drive_pump( unsigned int *num,  unsigned long *table)
 {
     const unsigned char ps = 1;//60;
-    unsigned int norma_10b = 916;
 
     if(mode_AUTO || mode_MAN)
     {
@@ -508,7 +503,7 @@ void drive_pump( unsigned int *num,  unsigned long *table)
             }
             if(f_measured == 1)
             {
-                f_measured = 0;
+                  f_measured = 0;
                 if(RESLT > table[norm_num])
                 {
                     ki++;

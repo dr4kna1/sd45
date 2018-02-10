@@ -40,7 +40,9 @@ void main(void)
 
     InitApp();
     initSPI();
-    norm_num = ROM_RD(0x10);                          // FIXME recover flow rate from ROM
+    norm_num = ROM_RD(0x10);
+    if(norm_num > 71)                                   // check for 1st ROM read
+        norm_num = 0x14;
     mode_MAN = 0;                                       // Init main control modes
     mode_AUTO = 0;
     mode_SET = 0;
