@@ -193,7 +193,7 @@ void irq_tmr1()
 
 void measure(void)
 {
-    if(mes_num == (measure_num + 1))
+    if(mes_num == 9)
         {
         int k = 0;
         // disable irqs, as we don't need new data in PER1
@@ -208,7 +208,7 @@ void measure(void)
             PER2 = 0;                   // reset buffer
 
             k = 0;
-             while(k < measure_num)                 // reset buffer per1
+             while(k < 8)                 // reset buffer per1
             {
                 PER1[k] = 0;
                 k++;
