@@ -40,3 +40,5 @@ unsigned long *arr_p;// = meash_arr;
 unsigned char led_state = 0;
 unsigned char ADCStatus = 0;
 unsigned int ADCData = 0;
+unsigned char service_info = 0;
+unsigned int  service_cnt = 0;

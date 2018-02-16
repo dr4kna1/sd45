@@ -275,21 +275,36 @@ void lit_led(unsigned int str1,unsigned int str2)
             PORTD = 0xFF;
             switch (led_state)
             {
-                case 1  :                                                                   // LED1 on, other off
-                   prcd_led1();
-                   nstr = (str1&0x0F00)>>8;
-
-                   PORTD = decode_str(nstr); break;                                          // lit '1'
+                case 1  :    
+                    // LED1 on, other off
+                    if (service_info)
+                    {
+                        prcd_led1();
+                        nstr = (str2&0x0F00)>>8;
+                        PORTD = decode_str(nstr); break;                                          // lit '1'
+                    }
+                    else
+                        break;
                 case 2  :
-                   prcd_led2(); PORTD = decode_str((str1&0x00F0)>>4); break;
+                    if (service_info)
+                    {
+                        prcd_led2(); PORTD = decode_str((str2&0x00F0)>>4); break;
+                    }
+                    else
+                        break;
                 case 3  :
-                   prcd_led3(); PORTD = decode_str(str1&0x000F); break;
+                    if (service_info)
+                    {
+                        prcd_led3(); PORTD = decode_str(str2&0x000F); break;
+                    }
+                    else
+                        break;
                 case 4  :
-                   prcd_led4(); PORTD = decode_str((str2&0x0F00)>>8); break;
+                    prcd_led4(); PORTD = decode_str((str1&0x0F00)>>8); break;
                 case 5  :
-                   prcd_led5(); PORTD = decode_str((str2&0x00F0)>>4); break;
+                    prcd_led5(); PORTD = decode_str((str1&0x00F0)>>4); break;
                 case 6  :
-                   prcd_led6(); PORTD = decode_str(str2&0x000F); break;
+                    prcd_led6(); PORTD = decode_str(str1&0x000F); break;
                 default: break;
             }
         }
@@ -359,6 +374,16 @@ void prcd_but(void)
     fUP   = UP;
     fSET  = SET;
 
+    if(!fUP & !fDOWN)   // UP and DOWN pushed simultaneously
+    {
+        service_cnt += 1;
+    }
+    if (service_cnt == 1500)
+    {
+        service_info = !service_info;
+        service_cnt=0;
+    }
+    
     indUP = !fUP;
     if(fUP > prev_UP)
     {
@@ -415,12 +440,16 @@ void prcd_but(void)
 void drive_pump( unsigned int *num,  unsigned long *table)
 {
     const unsigned char ps = 1;//60;
+    
 
     if(mode_AUTO || mode_MAN)
     {
         TRISCbits.RC2 = 0;                          // set PWM output
         CCP1CONbits.DC1B = 0b11;                    // 2 LSB of CCP1 reg = 3, so we have 8 bit DUTY_CYCLE resolution
-        PR2 = 0xFF;                                 // max tmr2 period (485HZ @ 8MHz)
+ //       if (norm_num < 10)
+ //           PR2 = 0x7F;                             // for lower range nozzle different PwMperiod ~1 kHz
+ //       else    
+            PR2 = 0xFF;                                 // max tmr2 period (485HZ @ 8MHz)
         T2CONbits.TMR2ON = 1;                       // start tmr2
         CCP1CONbits.CCP1M = 0xF;                    // enable PWM on CCP1
 
