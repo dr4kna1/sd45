@@ -12,7 +12,7 @@
 extern "C" {
 #endif
 
-#define PCB_rev 0
+#define PCB_rev 1
 
 #if PCB_rev == 0
 // LED segments bus
@@ -63,11 +63,11 @@ extern "C" {
 #define AN4 PORTBbits.RB1
 #define AN5 PORTBbits.RB0
 //panel buttons
-#define SET PORTBbits.RB6
-#define UP  PORTBbits.RB3
-#define DOWN PORTBbits.RB4
-#define MANUAL PORTBbits.RB7
-#define AUTO PORTBbits.RB5
+#define SET PORTBbits.RB3
+#define UP  PORTBbits.RB4
+#define DOWN PORTBbits.RB6
+#define MANUAL PORTBbits.RB5
+#define AUTO PORTBbits.RB7
 //panel leds
 #define indUP PORTAbits.RA1
 #define indDOWN PORTAbits.RA0

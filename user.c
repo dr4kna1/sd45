@@ -261,6 +261,7 @@ void prcd_led6(void)
  * input:
  * str1 - desired chosen flow rate,
  * str2 - measured flow rate from sensor  */
+#if PCB_rev == 0
 void lit_led(unsigned int str1,unsigned int str2)
 {
     int nstr;
@@ -313,10 +314,65 @@ void lit_led(unsigned int str1,unsigned int str2)
     
        led_state++;
 }
+#elif PCB_rev == 1
+void lit_led(unsigned int str1,unsigned int str2)
+{
+    int nstr;
+    // light up modes LEDs
+    indAUTO     = mode_AUTO;
+    indMANUAL   = mode_MAN;
+    indSET      = mode_SET;
+
+    // 7-seg LEDs
+    if(led_state < 7)
+        {
+            PORTD = 0xFF;
+            switch (led_state)
+            {
+                case 1  :    
+                    // LED1 on, other off
+                    if (service_info)
+                    {
+                        prcd_led1();
+                        nstr = (str2&0x0F00)>>8;
+                        PORTD = decode_str(nstr); break;                                          // lit '1'
+                    }
+                    else
+                        break;
+                case 2  :
+                    if (service_info)
+                    {
+                        prcd_led2(); PORTD = decode_str((str2&0x00F0)>>4) | 0x10; break;    // suppress dot 0x10
+                    }
+                    else
+                        break;
+                case 3  :
+                    if (service_info)
+                    {
+                        prcd_led3(); PORTD = decode_str(str2&0x000F) | 0x10; break;
+                    }
+                    else
+                        break;
+                case 4  :
+                    prcd_led4(); PORTD = decode_str((str1&0x0F00)>>8); break;
+                case 5  :
+                    prcd_led5(); PORTD = decode_str((str1&0x00F0)>>4) | 0x10; break;
+                case 6  :
+                    prcd_led6(); PORTD = decode_str(str1&0x000F) | 0x10; break;
+                default: break;
+            }
+        }
+        else
+            led_state = 0;
+    
+       led_state++;
+}
+#endif
 
 /* Decode hex int to 7-seg digit*/
 int decode_str(int str)
 {
+#if PCB_rev == 0
     int dec_str = 0xDF;
     if     (str == 0x0)         dec_str = 0x20;
     else if(str == 0x1)         dec_str = 0x79;
@@ -331,6 +387,22 @@ int decode_str(int str)
     else
          dec_str = 0xDF;
     return dec_str;
+#elif PCB_rev == 1
+    int dec_str = 0xFD;
+    if     (str == 0x0)         dec_str = 0x02;
+    else if(str == 0x1)         dec_str = 0xFA;
+    else if(str == 0x2)         dec_str = 0x0C;
+    else if(str == 0x3)         dec_str = 0x88;
+    else if(str == 0x4)         dec_str = 0xE0;
+    else if(str == 0x5)         dec_str = 0x81;
+    else if(str == 0x6)         dec_str = 0x01;
+    else if(str == 0x7)         dec_str = 0xC2;
+    else if(str == 0x8)         dec_str = 0x00;
+    else if(str == 0x9)         dec_str = 0x80;
+    else
+         dec_str = 0xFD;
+    return dec_str;    
+#endif
 }
 
 int binarySearch(unsigned long *tab1, unsigned long key, int high, int low)
