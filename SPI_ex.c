@@ -28,8 +28,8 @@ void initSPI(void)
 	
 	SSPCON1bits.CKP = 0;		//Idle state for clock is a low level
 	SSPCON1bits.SSPM0 = 0;
-	SSPCON1bits.SSPM1 = 0;
-	SSPCON1bits.SSPM2 = 1;
+	SSPCON1bits.SSPM1 = 1;
+	SSPCON1bits.SSPM2 = 0;
 	SSPCON1bits.SSPM3 = 0;		//SPI Master mode, clock = FOSC/64
 	SSPCON1bits.SSPEN = 1;		//Enables serial port and configures SCK, SDO, SDI and SS as serial port pins
 }
@@ -82,4 +82,18 @@ void prc_SPI(void)
     ADCStatus = readStatReg();          // ?????? ??????? ???
     if(!(ADCStatus & RDY))		// ???? ????????? ?????????????? ?????
         ADCData = readDataReg();
+}
+
+unsigned char readSPI_adr(unsigned char adr)
+{
+    unsigned char data = 0;
+    unsigned char rs = 0;
+    // ADC regs address range is 3 bits, adr position [5:3]
+    rs = (1<<6) | (adr & 0x7)<<3;     // put 1 do indicate read from adr                   
+    
+    CS = 0;
+    writeSPI(rs);                    // write to COMREG
+    data = readSPI();
+    CS = 1;
+    return data;
 }

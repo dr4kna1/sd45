@@ -71,7 +71,7 @@ unsigned char pwm_state = 0;
 void InitApp(void)
 {
     OSCCONbits.IRCF = 0b111;            // 8 MHz INTOSC
-    PORTA = 0x20;
+    PORTA = 0x00;
     TRISA = 0x00;
 
     PORTB = 0x00;

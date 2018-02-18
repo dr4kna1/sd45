@@ -37,7 +37,7 @@ char mode_SET = 0;
 void main(void)
 {
     arr_p = (void *)meash_arr;
-
+    unsigned char foo = 0;
     InitApp();
     initSPI();
     norm_num = ROM_RD(0x10);
@@ -63,6 +63,8 @@ void main(void)
         prev_norm_num = norm_num;
         lit_led(norm_arr[norm_num],rate_arr[arr_num]);
         drive_pump(pwm_p,per_pwm_p);
+        foo = readSPI_adr(0x4);       // read ADC ID
+        
 //        prc_SPI();                                     // there should be SPI task to query ADC
     }
 }
