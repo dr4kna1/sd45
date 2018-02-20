@@ -1,6 +1,7 @@
 
 #define grade 3                     /* grade for array */
 #define measure_num 1<<grade        /* number of consequential measurments */
+#define ADC_threshold 0x1000        /* threshold for mass bridge voltage */
 
 void InitApp(void);                 /* I/O and Peripheral Initialization */
 void irq_tmr3(void);                /* timer 3 irq handler */
@@ -39,6 +40,6 @@ unsigned int prev_norm_num = 0;
 unsigned long *arr_p;// = meash_arr;
 unsigned char led_state = 0;
 unsigned char ADCStatus = 0;
-unsigned int ADCData = 0;
+unsigned int  ADC_data = 0;
 unsigned char service_info = 0;
 unsigned int  service_cnt = 0;

@@ -32,7 +32,7 @@ unsigned char fAUTO = 1;
 unsigned char f_measured = 0;
 unsigned char ADC_ID = 0;
 unsigned char ADC_err = 0;
-unsigned int  ADC_data = 0;
+
 char mode_MAN = 0;
 char mode_AUTO = 0;
 char mode_SET = 0;
