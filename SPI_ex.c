@@ -28,10 +28,11 @@ void initSPI(void)
 	
 	SSPCON1bits.CKP = 0;		//Idle state for clock is a low level
 	SSPCON1bits.SSPM0 = 0;
-	SSPCON1bits.SSPM1 = 1;
+	SSPCON1bits.SSPM1 = 0;
 	SSPCON1bits.SSPM2 = 0;
-	SSPCON1bits.SSPM3 = 0;		//SPI Master mode, clock = FOSC/64
+	SSPCON1bits.SSPM3 = 0;		//SPI Master mode, clock = FOSC/4
 	SSPCON1bits.SSPEN = 1;		//Enables serial port and configures SCK, SDO, SDI and SS as serial port pins
+    CS = 1;                     //Idle the bus
 }
 
 unsigned char writeSPI(unsigned char data)

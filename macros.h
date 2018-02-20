@@ -63,11 +63,11 @@ extern "C" {
 #define AN4 PORTBbits.RB1
 #define AN5 PORTBbits.RB0
 //panel buttons
-#define SET PORTBbits.RB3
-#define UP  PORTBbits.RB4
-#define DOWN PORTBbits.RB6
-#define MANUAL PORTBbits.RB5
-#define AUTO PORTBbits.RB7
+#define SET PORTBbits.RB6
+#define UP  PORTBbits.RB3
+#define DOWN PORTBbits.RB4
+#define MANUAL PORTBbits.RB7
+#define AUTO PORTBbits.RB5
 //panel leds
 #define indUP PORTAbits.RA1
 #define indDOWN PORTAbits.RA0
