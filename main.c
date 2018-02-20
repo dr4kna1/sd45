@@ -30,6 +30,9 @@ unsigned char fSET = 1;
 unsigned char fMAN = 1;
 unsigned char fAUTO = 1;
 unsigned char f_measured = 0;
+unsigned char ADC_ID = 0;
+unsigned char ADC_err = 0;
+unsigned int  ADC_data = 0;
 char mode_MAN = 0;
 char mode_AUTO = 0;
 char mode_SET = 0;
@@ -37,9 +40,13 @@ char mode_SET = 0;
 void main(void)
 {
     arr_p = (void *)meash_arr;
-    unsigned char foo = 0;
     InitApp();
     initSPI();
+    ADC_ID = reset_ADC();
+    if (ADC_ID == 0x5B | ADC_ID == 0x5A)
+        ADC_err = 0;
+    else
+        ADC_err = 1;
     norm_num = ROM_RD(0x10);
     if(norm_num > 71)                                   // check for 1st ROM read
         norm_num = 0x14;
@@ -62,10 +69,8 @@ void main(void)
         }
         prev_norm_num = norm_num;
         lit_led(norm_arr[norm_num],rate_arr[arr_num]);
+        ADC_task(&ADC_data);
         drive_pump(pwm_p,per_pwm_p);
-        foo = readSPI_adr(0x4);       // read ADC ID
-        
-//        prc_SPI();                                     // there should be SPI task to query ADC
     }
 }
 

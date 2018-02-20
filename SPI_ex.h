@@ -17,11 +17,24 @@
 void initSPI(void);
 unsigned char writeSPI(unsigned char data);
 unsigned char readSPI(void);
-unsigned int readDataReg(void);
+unsigned int  readDataReg(void);
 unsigned char readStatReg(void);
-void prc_SPI(void);
+void ADC_task(unsigned int *ADCData);
 unsigned char readSPI_adr(unsigned char adr);
+unsigned char reset_ADC(void);
+
+bit ADC_wait = 0;
 
 //=====================================================================
+// ADC registers map
+#define ADC_COM_REG  0x0
+#define ADC_STS_REG  0x0
+#define ADC_MOD_REG  0x1
+#define ADC_CFG_REG  0x2
+#define ADC_DAT_REG  0x3
+#define ADC_ID_REG   0x4
+#define ADC_OFS_REG  0x6
+#define ADC_FSC_REG  0x7
+
 
 #endif	/* SPI_EX_H */
