@@ -20,6 +20,7 @@
 #include "user.h"
 #include "macros.h"
 #include "tables.h"
+#include "SPI_ex.h"
 
 unsigned int i=0;
 unsigned int j = 1;
@@ -517,7 +518,7 @@ void drive_pump( unsigned int *num,  unsigned long *table)
     const unsigned char ps = 1;//60;
     
  // drive pump if mass present or manual guidance
-    if(((ADC_data > ADC_threshold && mode_AUTO) || mode_MAN)&&PWR_ON)
+    if(((mass_locked && mode_AUTO) || mode_MAN)&&PWR_ON)
     {
         TRISCbits.RC2 = 0;                          // set PWM output
         CCP1CONbits.DC1B = 0b11;                    // 2 LSB of CCP1 reg = 3, so we have 8 bit DUTY_CYCLE resolution  

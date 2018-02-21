@@ -13,6 +13,7 @@
 
 #endif
 #include "SPI_ex.h"
+#include "user.h"
 
 void initSPI(void)
 {
@@ -86,7 +87,20 @@ void ADC_task(unsigned long *ADCData)
     
     temp = readDataReg();
     if(temp)
-        * ADCData = temp;
+    {
+        if(temp > ADC_threshold)
+            mass_lock_cnt += 1;
+        else
+        {
+            mass_lock_cnt = 0;
+            mass_locked = 0;
+        }
+        if (mass_lock_cnt == 10)
+        {
+            mass_lock_cnt = 0;
+            mass_locked = 1;
+        }
+    }
 }
 
 unsigned char readSPI_adr(unsigned char adr)

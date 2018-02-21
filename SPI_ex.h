@@ -24,6 +24,8 @@ unsigned char readSPI_adr(unsigned char adr);
 unsigned char reset_ADC(void);
 
 bit ADC_wait = 0;
+bit mass_locked = 0;
+unsigned char mass_lock_cnt = 0;
 
 //=====================================================================
 // ADC registers map
