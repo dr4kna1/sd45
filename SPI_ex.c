@@ -62,7 +62,9 @@ unsigned int readDataReg(void)
         ADC_wait = 0b0;
         dataValue = readSPI();  // MSB Data Register
         dataValue <<= 8;
-        dataValue |= readSPI();// LSB Data Register	
+        dataValue |= readSPI(); // mid Data Register	
+        dataValue <<= 8;
+        dataValue |= readSPI(); // LSB 
     }
 	return dataValue;
 }	
