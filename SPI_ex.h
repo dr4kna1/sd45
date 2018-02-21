@@ -17,9 +17,9 @@
 void initSPI(void);
 unsigned char writeSPI(unsigned char data);
 unsigned char readSPI(void);
-unsigned int  readDataReg(void);
+unsigned long  readDataReg(void);
 unsigned char readStatReg(void);
-void ADC_task(unsigned int *ADCData);
+void ADC_task(unsigned long *ADCData);
 unsigned char readSPI_adr(unsigned char adr);
 unsigned char reset_ADC(void);
 

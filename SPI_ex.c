@@ -48,9 +48,9 @@ unsigned char readSPI(void)
 	return data;
 }
 
-unsigned int readDataReg(void)
+unsigned long readDataReg(void)
 {
-	unsigned int dataValue = 0;
+	unsigned long dataValue = 0;
     
     if(ADC_wait == 0b0)
     {
@@ -80,9 +80,9 @@ unsigned char readStatReg(void)
 }	
 
 /* Read data register after ADC conversion*/
-void ADC_task(unsigned int *ADCData)
+void ADC_task(unsigned long *ADCData)
 {
-    unsigned int temp = 0;
+    unsigned long temp = 0;
     
     temp = readDataReg();
     if(temp)
