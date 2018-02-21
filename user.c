@@ -514,7 +514,7 @@ void drive_pump( unsigned int *num,  unsigned long *table)
     const unsigned char ps = 1;//60;
     
 
-    if(mode_AUTO || mode_MAN)
+    if((ADC_data > ADC_threshold && mode_AUTO) || mode_MAN)     // drive pump if mass present or manual guide
     {
         TRISCbits.RC2 = 0;                          // set PWM output
         CCP1CONbits.DC1B = 0b11;                    // 2 LSB of CCP1 reg = 3, so we have 8 bit DUTY_CYCLE resolution
