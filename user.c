@@ -445,66 +445,69 @@ void prcd_but(void)
     fMAN  = MANUAL;
     fUP   = UP;
     fSET  = SET;
-
-    if(!fUP & !fDOWN)   // UP and DOWN pushed simultaneously
-    {
-        service_cnt += 1;
-    }
-    if (service_cnt == 1500)
-    {
-        service_info = !service_info;
-        service_cnt=0;
-    }
     
-    indUP = !fUP;
-    if(fUP > prev_UP)
+    pwron_task();
+    if(PWR_ON)
     {
-        if(mode_SET)
-        {
-            norm_num++;
-            pwm_state = 0;
-            if(norm_num >= 71)
-                    norm_num = 70;
-        }
-    }
-    prev_UP = fUP;
+		if(!fUP & !fDOWN)   // UP and DOWN pushed simultaneously
+		{
+			service_cnt += 1;
+		}
+		if (service_cnt == 1500)
+		{
+			service_info = !service_info;
+			service_cnt=0;
+		}
+		
+		indUP = !fUP;
+		if(fUP > prev_UP)
+		{
+			if(mode_SET)
+			{
+				norm_num++;
+				pwm_state = 0;
+				if(norm_num >= 71)
+						norm_num = 70;
+			}
+		}
+		prev_UP = fUP;
 /*-----------------------------------------------------------------------*/
-    indDOWN = !fDOWN;
-    if(fDOWN > prev_DOWN)
-    {
-        if(mode_SET)
-        {
-            pwm_state = 0;
-            if(norm_num <= 0)
-                norm_num = 0;
-            else
-                norm_num--;
-        }
-    }
-    prev_DOWN = fDOWN;
-
+		indDOWN = !fDOWN;
+		if(fDOWN > prev_DOWN)
+		{
+			if(mode_SET)
+			{
+				pwm_state = 0;
+				if(norm_num <= 0)
+					norm_num = 0;
+				else
+					norm_num--;
+			}
+		}
+		prev_DOWN = fDOWN;
+	
 /*-----------------------------------------------------------------------*/
-    if(fSET > prev_SET)
-    {
-        mode_SET = !mode_SET;
-        prev_SET = 1;
-    }
-    prev_SET = fSET;
+		if(fSET > prev_SET)
+		{
+			mode_SET = !mode_SET;
+			prev_SET = 1;
+		}
+		prev_SET = fSET;
 /*-----------------------------------------------------------------------*/
-    if(fAUTO > prev_AUTO)
-    {
-        mode_AUTO = !mode_AUTO;
-        mode_MAN = 0;
-    }
-    prev_AUTO = fAUTO;
+		if(fAUTO > prev_AUTO)
+		{
+			mode_AUTO = !mode_AUTO;
+			mode_MAN = 0;
+		}
+		prev_AUTO = fAUTO;
 /*-----------------------------------------------------------------------*/
-    if(fMAN > prev_MAN)
-    {
-        mode_MAN = !mode_MAN;
-        mode_AUTO = 0;
+		if(fMAN > prev_MAN)
+		{
+			mode_MAN = !mode_MAN;
+			mode_AUTO = 0;
+		}
+		prev_MAN = fMAN;
     }
-    prev_MAN = fMAN;
-
 
 }
 
@@ -513,14 +516,11 @@ void drive_pump( unsigned int *num,  unsigned long *table)
 {
     const unsigned char ps = 1;//60;
     
-
-    if((ADC_data > ADC_threshold && mode_AUTO) || mode_MAN)     // drive pump if mass present or manual guide
+ // drive pump if mass present or manual guidance
+    if(((ADC_data > ADC_threshold && mode_AUTO) || mode_MAN)&&PWR_ON)
     {
         TRISCbits.RC2 = 0;                          // set PWM output
-        CCP1CONbits.DC1B = 0b11;                    // 2 LSB of CCP1 reg = 3, so we have 8 bit DUTY_CYCLE resolution
- //       if (norm_num < 10)
- //           PR2 = 0x7F;                             // for lower range nozzle different PwMperiod ~1 kHz
- //       else    
+        CCP1CONbits.DC1B = 0b11;                    // 2 LSB of CCP1 reg = 3, so we have 8 bit DUTY_CYCLE resolution  
             PR2 = 0xFF;                                 // max tmr2 period (485HZ @ 8MHz)
         T2CONbits.TMR2ON = 1;                       // start tmr2
         CCP1CONbits.CCP1M = 0xF;                    // enable PWM on CCP1
@@ -567,10 +567,7 @@ void drive_pump( unsigned int *num,  unsigned long *table)
     }
     else
     {
-        TRISCbits.RC2 = 1;          // set PWM as input to disable pin
-        CCP1CONbits.CCP1M = 0x0;    // disable PWM module
-        T2CONbits.TMR2ON = 0;
-        pwm_state = 0;
+        disable_pump();
     }
 }
 #elif PWM_capacity == 10
@@ -680,4 +677,32 @@ unsigned char ROM_RD(unsigned char adr)
     EECON1bits.CFGS = 0; // 0 = Access Flash program or DATA EEPROM memory
     EECON1bits.RD   = 1; // EEPROM Read
     return EEDATA;       // return data
+}
+
+void pwron_task(void)
+{
+    unsigned int level = PWROFF_time;
+    
+    if(PWR_ON)
+        level = PWRON_time;
+    else
+        level = PWROFF_time;
+    
+    if(!fSET)
+        pwron_cnt += 1;
+    else
+        pwron_cnt = 0;
+    if(pwron_cnt == level)
+    {
+        PWR_ON = ~PWR_ON;
+        pwron_cnt = 0;
+    }
+}
+
+void disable_pump(void)
+{
+        TRISCbits.RC2 = 1;          // set PWM as input to disable pin
+        CCP1CONbits.CCP1M = 0x0;    // disable PWM module
+        T2CONbits.TMR2ON = 0;
+        pwm_state = 0;
 }

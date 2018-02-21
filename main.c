@@ -56,21 +56,36 @@ void main(void)
     while(1)
     {
         prcd_but();                                     // get buttons state
-        measure();                                      // calculate flow based on feedback
-        if(f_measured == 1)                             // flow calculated
-            arr_num = binarySearch(arr_p,RESLT,767,0);  // set digit display with flow value
-        else
-        if(f_measured == 0 && ACTV == 2)                // flow measure timed-out/no signal from sensor
-            arr_num = 767;                              // null flow
-        if(mode_SET)                                    // write chosen flow rate to ROM
+        if(PWR_ON)
         {
-            if(norm_num != prev_norm_num)
-                ROM_WR(0x10,norm_num);
+            measure();                                      // calculate flow based on feedback
+            if(f_measured == 1)                             // flow calculated
+                arr_num = binarySearch(arr_p,RESLT,767,0);  // set digit display with flow value
+            else
+            if(f_measured == 0 && ACTV == 2)                // flow measure timed-out/no signal from sensor
+                arr_num = 767;                              // null flow
+            if(mode_SET)                                    // write chosen flow rate to ROM
+            {
+                if(norm_num != prev_norm_num)
+                    ROM_WR(0x10,norm_num);
+            }
+            prev_norm_num = norm_num;
+            lit_led(norm_arr[norm_num],rate_arr[arr_num]);
+            ADC_task(&ADC_data);
+            drive_pump(pwm_p,per_pwm_p);
         }
-        prev_norm_num = norm_num;
-        lit_led(norm_arr[norm_num],rate_arr[arr_num]);
-        ADC_task(&ADC_data);
-        drive_pump(pwm_p,per_pwm_p);
+        else
+        {
+            PORTD = 0xFF;   // switch off screen
+            disable_pump();
+            indAUTO = 0;
+            indMANUAL = 0;
+            indSET  = 0;
+            indPUMP = 0;
+            mode_MAN = 0;
+            mode_AUTO = 0;
+            mode_SET  = 0;
+        }
     }
 }
 

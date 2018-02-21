@@ -2,6 +2,8 @@
 #define grade 3                     /* grade for array */
 #define measure_num 1<<grade        /* number of consequential measurments */
 #define ADC_threshold 0x800000      /* threshold for mass bridge voltage */
+#define PWRON_time    9000          /* time to hold SET button to enable main cycle */
+#define PWROFF_time   54000
 
 void InitApp(void);                 /* I/O and Peripheral Initialization */
 void irq_tmr3(void);                /* timer 3 irq handler */
@@ -20,7 +22,9 @@ void prcd_led6(void);
 void prcd_but(void);
 void measure(void);
 void measure0(void);
-void ROM_WR(unsigned int adr, unsigned int data);
+void pwron_task(void);
+void disable_pump(void);
+;void ROM_WR(unsigned int adr, unsigned int data);
 unsigned char ROM_RD(unsigned char adr);
 void drive_pump( unsigned int *num,  unsigned long *table);
 int decode_str(int str);
@@ -43,3 +47,6 @@ unsigned char ADCStatus = 0;
 unsigned long ADC_data = 0;
 unsigned char service_info = 0;
 unsigned int  service_cnt = 0;
+bit PWR_ON = 0;
+unsigned int pwron_cnt = 0;
+
