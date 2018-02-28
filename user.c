@@ -42,6 +42,7 @@ unsigned int string = 0x0;
 unsigned int dig_i = 0;
 unsigned char flash = 0;
 unsigned int norma_10b = 916;
+unsigned int norma_8b = 228;
 
 extern unsigned char f_measured;
 extern unsigned char fUP;
@@ -528,15 +529,17 @@ void drive_pump( unsigned int *num,  unsigned long *table)
 
         if(pwm_state == 0)                          // if new norm_rate set
         {
-            CCPR1L = num[norm_num];                     // then borrowing DUTY_CYCLE from table
+            norma_8b = num[norm_num];               // then borrowing DUTY_CYCLE from table
+            CCPR1L = norma_8b;
             pwm_state = 1;                          // next DC from compare RESLT and table per_pwm_arr
         }
         else if(pwm_state == 1)
         {
-            if(RESLT >= table[0])
+            if(RESLT >= table[0])                   // measured flow rate smaller than lowest selected rate
             {
                 pwm_state = 0;
-                CCPR1L = num[norm_num];
+                norma_8b = num[norm_num];
+                CCPR1L = norma_8b;
             }
             if(f_measured == 1)
             {
@@ -546,9 +549,10 @@ void drive_pump( unsigned int *num,  unsigned long *table)
                     ki++;
                     if(ki == ps)
                     {
-                        CCPR1L--;
-                        if(CCPR1L <= 50)
-                            CCPR1L = 50;
+                        norma_8b = norma_8b - 1;
+                        if(norma_8b <= 50)
+                            norma_8b = 50;
+                        CCPR1L = norma_8b;
                         ki = 0;
                     }
                 }
@@ -557,9 +561,10 @@ void drive_pump( unsigned int *num,  unsigned long *table)
                     ki++;
                     if(ki == ps)
                     {
-                        CCPR1L++;
-                        if(CCPR1L > 231)
-                            CCPR1L = 231;
+                        norma_8b = norma_8b + 1;
+                        if(norma_8b > 231)
+                            norma_8b = 231;
+                        CCPR1L = norma_8b;
                         ki = 0;
                     }
                 }
