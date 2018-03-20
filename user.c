@@ -550,8 +550,8 @@ void drive_pump( unsigned int *num,  unsigned long *table)
                     if(ki == ps)
                     {
                         norma_8b = norma_8b - 1;
-                        if(norma_8b <= 50)
-                            norma_8b = 50;
+                        if(norma_8b <= 2)   //if(norma_8b <= 10)
+                            norma_8b = 2;  //norma_8b = 10;
                         CCPR1L = norma_8b;
                         ki = 0;
                     }
