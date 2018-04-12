@@ -1,7 +1,7 @@
 
 #define grade 3                     /* grade for array */
 #define measure_num 1<<grade        /* number of consequential measurments */
-#define ADC_threshold 0x800000      /* threshold for mass bridge voltage */
+#define ADC_threshold 0x81B320      /* threshold for mass bridge voltage */
 #define PWRON_time    9000          /* time to hold SET button to enable main cycle */
 #define PWROFF_time   54000
 
