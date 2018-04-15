@@ -1152,7 +1152,7 @@ const  unsigned int rate_arr[768] = {
 0x53,
 0x52,
 0x51,
-0xAAA
+0xFFF
 } ;
 
 /* table for searching measured flow rate position in rate_arr table */

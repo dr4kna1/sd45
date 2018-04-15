@@ -47,6 +47,14 @@ unsigned char ADCStatus = 0;
 unsigned long ADC_data = 0;
 unsigned char service_info = 0;
 unsigned int  service_cnt = 0;
+unsigned int  auto_cnt = 0;
+bit calibration_info = 0b0;
+bit cal_info_prev = 0b0;
+bit calibration_act  = 0b0;
 bit PWR_ON = 0;
 unsigned int pwron_cnt = 0;
+
+unsigned char  AUTO_rlsd = 0b1;
+unsigned char  AUTO_btn_hold = 0b0;
+unsigned char  AUTO_forbid = 0b0;
 
