@@ -18,6 +18,7 @@
 #include "macros.h"
 #include "SPI_ex.h"
 #include "tables.h"        /* calibrated flow, PWM and other tabe values */
+#include "PID.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -42,6 +43,7 @@ void main(void)
     arr_p = (void *)meash_arr;
     InitApp();
     initSPI();
+    pid_init(&PID_cfg, &I_term, &D_term);
     ADC_ID = reset_ADC();
     if (ADC_ID == 0x5B | ADC_ID == 0x5A)
         ADC_err = 0;

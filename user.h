@@ -24,7 +24,7 @@ void measure(void);
 void measure0(void);
 void pwron_task(void);
 void disable_pump(void);
-;void ROM_WR(unsigned int adr, unsigned int data);
+void ROM_WR(unsigned int adr, unsigned int data);
 unsigned char ROM_RD(unsigned char adr);
 void drive_pump( unsigned int *num,  unsigned long *table);
 int decode_str(int str);
