@@ -70,7 +70,7 @@ void main(void)
                     ROM_WR(0x10,norm_num);
             }
             prev_norm_num = norm_num;
-            lit_led(norm_arr[norm_num],rate_arr[arr_num]);
+            lit_led(norm_arr[norm_num],rate_arr[arr_num],adc_conv_cnt);
             ADC_task(&ADC_data);
             drive_pump(pwm_p,per_pwm_p);
         }

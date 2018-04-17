@@ -60,6 +60,8 @@ unsigned long readDataReg(void)
     }
     if (PORTCbits.SDI == 0) // nRDY as SDI signals that conversion completed
     {   
+        if(adc_conv_cnt < ADC_CONV_TR)
+            adc_conv_cnt++;     // new conversion
         ADC_wait = 0b0;
         dataValue = readSPI();  // MSB Data Register
         dataValue <<= 8;
@@ -87,8 +89,19 @@ void ADC_task(unsigned long *ADCData)
     
     temp = readDataReg();
     if(temp)
-    {
-        if(temp > ADC_threshold)
+    {   
+        if(!calibration_info)
+            adc_conv_cnt = 0;
+        if(calibration_act)     // calibration branch
+        {   
+            if(adc_conv_cnt == ADC_CONV_TR)
+            {
+            //    adc_conv_cnt     = 0;
+                calibration_act  = 0;
+            //    calibration_info = 0;
+            }
+        }
+        else if(temp > ADC_threshold)
             mass_lock_cnt += 1;
         else
         {

@@ -12,7 +12,7 @@ void irq_tmr0(void);
 void irq_ccp2(void);
 void irq2_ccp2(void);
 void irq_ioch(void);
-void lit_led(unsigned int str1,unsigned int str2);
+void lit_led(unsigned int str1,unsigned int str2,unsigned int adc_cnt);
 void prcd_led1(void);
 void prcd_led2(void);
 void prcd_led3(void);
@@ -51,6 +51,7 @@ unsigned int  auto_cnt = 0;
 bit calibration_info = 0b0;
 bit cal_info_prev = 0b0;
 bit calibration_act  = 0b0;
+unsigned int adc_conv_cnt  = 0;
 bit PWR_ON = 0;
 unsigned int pwron_cnt = 0;
 

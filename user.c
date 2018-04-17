@@ -317,7 +317,7 @@ void lit_led(unsigned int str1,unsigned int str2)
        led_state++;
 }
 #elif PCB_rev == 1
-void lit_led(unsigned int str1,unsigned int str2)
+void lit_led(unsigned int str1,unsigned int str2, unsigned int adc_cnt)
 {
     int nstr;
     // light up modes LEDs
@@ -380,11 +380,11 @@ void lit_led(unsigned int str1,unsigned int str2)
             {
                 case 1  :    
                 // LED1 on, other off
-                        prcd_led1(); PORTD = 0xFD; break;
+                        prcd_led1(); PORTD = decode_str((arr_hexdec_p[adc_cnt]&0x0F00)>>8) | 0x10; break;
                     case 2  :
-                        prcd_led2(); PORTD = 0xFD; break;
+                        prcd_led2(); PORTD = decode_str((arr_hexdec_p[adc_cnt]&0x00F0)>>4) | 0x10; break;
                     case 3  :
-                        prcd_led3(); PORTD = 0xFD; break;
+                        prcd_led3(); PORTD = decode_str((arr_hexdec_p[adc_cnt]&0x000F)) | 0x10; break;
                     case 4  :
                         prcd_led4(); PORTD = 0x07 | 0x10; break; // display 'C'
                     case 5  :
@@ -437,7 +437,7 @@ int decode_str(int str)
     else if(str == 0xC)         dec_str = 0x07;
     else if(str == 0xD)         dec_str = 0x28;
     else if(str == 0xE)         dec_str = 0x05;
-    else if(str == 0xF)         dec_str = 0xFD; //0x45;
+    else if(str == 0xF)         dec_str = 0x45; //0x45;
     else if(str == 0x10)        dec_str = 0x27; // symbol 'L'
     else
          dec_str = 0xFD;
@@ -562,6 +562,11 @@ void prcd_but(void)
             AUTO_btn_hold = 0;
             cal_info_prev = calibration_info;
             calibration_info = !calibration_info;
+            if(adc_conv_cnt == 64)
+                calibration_act = 0b0;
+            else
+                calibration_act = 0b1;
+            adc_conv_cnt = 0;
             auto_cnt = 0;
         }
         if(!AUTO_rlsd)

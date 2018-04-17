@@ -10,6 +10,8 @@
 #define CS PORTAbits.RA5
 #define RDY 0b10000000
 #define ERR 0b01000000
+
+#define ADC_CONV_TR 63  // number of sequential ADC ocnversion during calibration
 //*********************************************************************
 
 //======================= прототипы функций ===========================
