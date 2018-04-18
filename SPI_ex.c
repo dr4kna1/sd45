@@ -85,7 +85,7 @@ unsigned char readStatReg(void)
 /* Read data register after ADC conversion*/
 void ADC_task(unsigned long *ADCData)
 {
-    unsigned long temp = 0;
+    unsigned long temp = 0;    
     
     temp = readDataReg();
     if(temp)
@@ -94,14 +94,20 @@ void ADC_task(unsigned long *ADCData)
             adc_conv_cnt = 0;
         if(calibration_act)     // calibration branch
         {   
+            cal_acc = cal_acc + temp;
+            if(adc_conv_cnt > 1)
+                cal_acc = cal_acc >> 2; // constantly averaging ADC data
             if(adc_conv_cnt == ADC_CONV_TR)
             {
-            //    adc_conv_cnt     = 0;
                 calibration_act  = 0;
-            //    calibration_info = 0;
+                ADC_THR_v = cal_acc;
+                ROM_WR(ADC_THR_ADR,(0xFF000000&cal_acc)>>24);
+                ROM_WR(ADC_THR_ADR + 1,(0x00FF0000&cal_acc)>>16);
+                ROM_WR(ADC_THR_ADR + 2,(0x0000FF00&cal_acc)>>8);
+                ROM_WR(ADC_THR_ADR + 3,(0x000000FF&cal_acc));
             }
         }
-        else if(temp > ADC_threshold)
+        else if(temp > ADC_THR_v)
             mass_lock_cnt += 1;
         else
         {

@@ -30,8 +30,7 @@ unsigned char fSET = 1;
 unsigned char fMAN = 1;
 unsigned char fAUTO = 1;
 unsigned char f_measured = 0;
-unsigned char ADC_ID = 0;
-unsigned char ADC_err = 0;
+
 
 char mode_MAN = 0;
 char mode_AUTO = 0;
@@ -42,14 +41,7 @@ void main(void)
     arr_p = (void *)meash_arr;
     InitApp();
     initSPI();
-    ADC_ID = reset_ADC();
-    if (ADC_ID == 0x5B | ADC_ID == 0x5A)
-        ADC_err = 0;
-    else
-        ADC_err = 1;
-    norm_num = ROM_RD(0x10);
-    if(norm_num > 71)                                   // check for 1st ROM read
-        norm_num = 0x14;
+    get_settings();
     mode_MAN = 0;                                       // Init main control modes
     mode_AUTO = 0;
     mode_SET = 0;

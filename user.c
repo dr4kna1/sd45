@@ -794,3 +794,26 @@ void disable_pump(void)
         T2CONbits.TMR2ON = 0;
         pwm_state = 0;
 }
+
+void get_settings(void)
+{
+    // verify ADC status (not used)
+    ADC_ID = reset_ADC();
+    if (ADC_ID == 0x5B | ADC_ID == 0x5A)
+        ADC_err = 0;
+    else
+        ADC_err = 1;
+    // retrieve set flow rate if any
+    norm_num = ROM_RD(0x10);
+    if(norm_num > 71)                                   // check for 1st ROM read
+        norm_num = 0x14;
+    // get calibration threshold
+    unsigned long temp[4] = {0};
+    int k = 0;
+    for(k = 0; k < 4; k++)
+        temp[k] = ROM_RD(ADC_THR_ADR + k);
+    if(temp[0] == 0xFF & temp[1] == 0xFF & temp[2] == 0xFF & temp[3] == 0xFF)   // Calibration ROM wasn't initialized
+        ADC_THR_v = 0x0081B320;                                                 // default threshold
+    else
+        ADC_THR_v = temp[0]<<24 | temp[1]<<16 | temp[2]<<8 | temp[3];           // previous calibration data
+}
