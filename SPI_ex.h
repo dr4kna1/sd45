@@ -10,6 +10,7 @@
 #define CS PORTAbits.RA5
 #define RDY 0b10000000
 #define ERR 0b01000000
+
 //*********************************************************************
 
 //======================= прототипы функций ===========================
@@ -26,6 +27,7 @@ unsigned char reset_ADC(void);
 bit ADC_wait = 0;
 bit mass_locked = 0;
 unsigned char mass_lock_cnt = 0;
+unsigned long ADC_THR_v = 0x0081B320;
 
 //=====================================================================
 // ADC registers map
