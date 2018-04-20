@@ -318,57 +318,88 @@ void lit_led(unsigned int str1,unsigned int str2)
        led_state++;
 }
 #elif PCB_rev == 1
-void lit_led(unsigned int str1,unsigned int str2)
+void lit_led(unsigned int str1,unsigned int str2, unsigned int adc_cnt)
 {
     int nstr;
     // light up modes LEDs
     indAUTO     = mode_AUTO;
     indMANUAL   = mode_MAN;
     indSET      = mode_SET;
-
-    // 7-seg LEDs
-    if(led_state < 7)
+    
+    if(calibration_info == 0)
+    {
+        // 7-seg LEDs
+        if(led_state < 7)
+          {
+              PORTD = 0xFF;
+              switch (led_state)
+                {
+                    case 1  :    
+                        // LED1 on, other off
+                        if (service_info)
+                        {
+                            prcd_led1();
+                            nstr = (str2&0x0F00)>>8;
+                            PORTD = decode_str(nstr); break;                                          // lit '1'
+                        }
+                        else
+                            break;
+                    case 2  :
+                        if (service_info)
+                        {
+                            prcd_led2(); PORTD = decode_str((str2&0x00F0)>>4) | 0x10; break;    // suppress dot 0x10
+                        }
+                        else
+                            break;
+                    case 3  :
+                        if (service_info)
+                        {
+                            prcd_led3(); PORTD = decode_str(str2&0x000F) | 0x10; break;
+                        }
+                        else
+                            break;
+                    case 4  :
+                        prcd_led4(); PORTD = decode_str((str1&0x0F00)>>8); break;
+                    case 5  :
+                        prcd_led5(); PORTD = decode_str((str1&0x00F0)>>4) | 0x10; break;
+                    case 6  :
+                        prcd_led6(); PORTD = decode_str(str1&0x000F) | 0x10; break;
+                    default: break;
+                }
+          }
+            else
+                led_state = 0;
+    
+       led_state++;
+    }
+    else
+    {
+        if(led_state < 7)
         {
             PORTD = 0xFF;
             switch (led_state)
             {
                 case 1  :    
-                    // LED1 on, other off
-                    if (service_info)
-                    {
-                        prcd_led1();
-                        nstr = (str2&0x0F00)>>8;
-                        PORTD = decode_str(nstr); break;                                          // lit '1'
-                    }
-                    else
-                        break;
-                case 2  :
-                    if (service_info)
-                    {
-                        prcd_led2(); PORTD = decode_str((str2&0x00F0)>>4) | 0x10; break;    // suppress dot 0x10
-                    }
-                    else
-                        break;
-                case 3  :
-                    if (service_info)
-                    {
-                        prcd_led3(); PORTD = decode_str(str2&0x000F) | 0x10; break;
-                    }
-                    else
-                        break;
-                case 4  :
-                    prcd_led4(); PORTD = decode_str((str1&0x0F00)>>8); break;
-                case 5  :
-                    prcd_led5(); PORTD = decode_str((str1&0x00F0)>>4) | 0x10; break;
-                case 6  :
-                    prcd_led6(); PORTD = decode_str(str1&0x000F) | 0x10; break;
-                default: break;
-            }
-        }
-        else
-            led_state = 0;
+                // LED1 on, other off
+                        prcd_led1(); PORTD = decode_str((arr_hexdec_p[adc_cnt]&0x0F00)>>8) | 0x10; break;
+                    case 2  :
+                        prcd_led2(); PORTD = decode_str((arr_hexdec_p[adc_cnt]&0x00F0)>>4) | 0x10; break;
+                    case 3  :
+                        prcd_led3(); PORTD = decode_str((arr_hexdec_p[adc_cnt]&0x000F)) | 0x10; break;
+                    case 4  :
+                        prcd_led4(); PORTD = 0x07 | 0x10; break; // display 'C'
+                    case 5  :
+                        prcd_led5(); PORTD = 0x27 | 0x10; break;
+                    case 6  :
+                        prcd_led6(); PORTD = 0x21 | 0x10; break;
+                    default: break;
+                }
+          }
+            else
+                led_state = 0;
     
        led_state++;
+    }
 }
 #endif
 
@@ -402,6 +433,13 @@ int decode_str(int str)
     else if(str == 0x7)         dec_str = 0xC2;
     else if(str == 0x8)         dec_str = 0x00;
     else if(str == 0x9)         dec_str = 0x80;
+    else if(str == 0xA)         dec_str = 0xB0;
+    else if(str == 0xB)         dec_str = 0x21;
+    else if(str == 0xC)         dec_str = 0x07;
+    else if(str == 0xD)         dec_str = 0x28;
+    else if(str == 0xE)         dec_str = 0x05;
+    else if(str == 0xF)         dec_str = 0x45; //0x45;
+    else if(str == 0x10)        dec_str = 0x27; // symbol 'L'
     else
          dec_str = 0xFD;
     return dec_str;    
@@ -465,7 +503,7 @@ void prcd_but(void)
 		indUP = !fUP;
 		if(fUP > prev_UP)
 		{
-			if(mode_SET)
+			if(mode_SET & !calibration_info)
 			{
 				norm_num++;
 				pwm_state = 0;
@@ -478,7 +516,7 @@ void prcd_but(void)
 		indDOWN = !fDOWN;
 		if(fDOWN > prev_DOWN)
 		{
-			if(mode_SET)
+			if(mode_SET & !calibration_info)
 			{
 				pwm_state = 0;
 				if(norm_num <= 0)
@@ -492,17 +530,61 @@ void prcd_but(void)
 /*-----------------------------------------------------------------------*/
 		if(fSET > prev_SET)
 		{
-			mode_SET = !mode_SET;
-			prev_SET = 1;
+            if(!calibration_info)
+            {
+                mode_SET = !mode_SET;
+                prev_SET = 1;
+            }
+            else
+            {
+                calibration_act = !calibration_act;
+                mode_SET = 0;
+            }
 		}
 		prev_SET = fSET;
 /*-----------------------------------------------------------------------*/
+        
+        if(!fAUTO & !AUTO_forbid)
+        {
+            auto_cnt += 1;
+            cal_info_prev = 0;
+        }
+        else
+            auto_cnt = 0;
+        if(auto_cnt == 3000)
+        {   
+            AUTO_btn_hold = 0b1;
+            auto_cnt = 0;
+            AUTO_rlsd = 0b0;
+        }
+        // AUTO button was hold during period and then released
+        if(AUTO_btn_hold)
+        {
+            AUTO_btn_hold = 0;
+            cal_info_prev = calibration_info;
+            calibration_info = !calibration_info;
+            if(adc_conv_cnt == 64)
+                calibration_act = 0b0;
+            else
+                calibration_act = 0b1;
+            adc_conv_cnt = 0;
+            auto_cnt = 0;
+        }
+        if(!AUTO_rlsd)
+            AUTO_forbid = 0b1;
+        else
+            AUTO_forbid = 0b0;
+        
 		if(fAUTO > prev_AUTO)
 		{
-			mode_AUTO = !mode_AUTO;
-			mode_MAN = 0;
+            if(!calibration_info & !cal_info_prev)
+            {
+                mode_AUTO = !mode_AUTO;
+                mode_MAN = 0;
+            }
+            AUTO_rlsd = 0b1;
 		}
-		prev_AUTO = fAUTO;
+            prev_AUTO = fAUTO;
 /*-----------------------------------------------------------------------*/
 		if(fMAN > prev_MAN)
 		{
@@ -712,4 +794,27 @@ void disable_pump(void)
         CCP1CONbits.CCP1M = 0x0;    // disable PWM module
         T2CONbits.TMR2ON = 0;
         pwm_state = 0;
+}
+
+void get_settings(void)
+{
+    // verify ADC status (not used)
+    ADC_ID = reset_ADC();
+    if (ADC_ID == 0x5B | ADC_ID == 0x5A)
+        ADC_err = 0;
+    else
+        ADC_err = 1;
+    // retrieve set flow rate if any
+    norm_num = ROM_RD(0x10);
+    if(norm_num > 71)                                   // check for 1st ROM read
+        norm_num = 0x14;
+    // get calibration threshold
+    unsigned long temp[4] = {0};
+    int k = 0;
+    for(k = 0; k < 4; k++)
+        temp[k] = ROM_RD(ADC_THR_ADR + k);
+    if(temp[0] == 0xFF & temp[1] == 0xFF & temp[2] == 0xFF & temp[3] == 0xFF)   // Calibration ROM wasn't initialized
+        ADC_THR_v = 0x0081B320;                                                 // default threshold
+    else
+        ADC_THR_v = temp[0]<<24 | temp[1]<<16 | temp[2]<<8 | temp[3];           // previous calibration data
 }

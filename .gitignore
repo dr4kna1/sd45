@@ -6,6 +6,7 @@ debug/
 *.map
 *.d
 *.bak
+*.orig
 **/nbproject/private
 **/nbproject/Makefile-*
 **/nbproject/Package-*
