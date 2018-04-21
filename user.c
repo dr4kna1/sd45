@@ -155,20 +155,26 @@ void irq_ccp2(void)
 {
     //clear CCP2 irq flag
     PIR2bits.CCP2IF = 0;
-
+    
+    PER0 = PER0+((CCPR2H<<8) + CCPR2L);
+    PER1[0] = PER0;
+    PER0 = 0;
+/*
     if((mes_num) > 0)
     {
         ACTV = 1;
     }                       // period measurment started
+    
     if((mes_num <= measure_num) & ACTV==1)
     {
         PER0 = PER0+((CCPR2H<<8) + CCPR2L);
         PER1[mes_num-1] = PER0;
         PER0 = 0;
+  */
          /*Enable irqs there if needed*/
         j = !j;
         indPUMP =  j;
-    }
+ //   }
     TMR3H = 0;                      // reload timer
     TMR3L = 0;
 
@@ -203,11 +209,11 @@ void measure(void)
             PIE2bits.CCP2IE = 0;
             f_measured = 1;
             ACTV = 0;
-            PER2 = sumarr(PER1);
-            PER2 = PER2>>grade;             // divide by grade
+//            PER2 = sumarr(PER1);
+//            PER2 = PER2>>grade;             // divide by grade
 //            PER2 = PER1[4];
-            RESLT = PER2;
-            PER2 = 0;                   // reset buffer
+            RESLT = PER1[0];
+//            PER2 = 0;                   // reset buffer
 
             k = 0;
              while(k < 8)                 // reset buffer per1

@@ -18,7 +18,7 @@ void pid_init(struct PID_cfg_s *PID_cfg, float *I_term, float *D_term)
  * 2 - impulse period that correspond desired FLow rate
  * 3 - PID configuration - coefficients and terms memory allocation
  */
-void pid_task(unsigned long Measured, unsigned long Set, struct PID_cfg_s *PID)
+void pid_task(unsigned long Measured, long Set, struct PID_cfg_s *PID)
 {   
     float Real = 0;
     Real = calc_measure(Measured);

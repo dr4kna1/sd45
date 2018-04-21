@@ -65,8 +65,8 @@ void main(void)
                 if(norm_num != prev_norm_num)
                     ROM_WR(0x10,norm_num);
             }
-            Set_Flow = (long)set_Q[norm_num];
-            if(ACTV == 2 | ACTV == 0)
+            Set_Flow = set_Q[norm_num];
+            if((mass_locked && mode_AUTO) || mode_MAN)
                 pid_task(RESLT,Set_Flow,&PID_cfg);
             prev_norm_num = norm_num;
             lit_led(norm_arr[norm_num],rate_arr[arr_num],adc_conv_cnt);
