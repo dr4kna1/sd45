@@ -36,13 +36,15 @@ unsigned char f_measured = 0;
 char mode_MAN = 0;
 char mode_AUTO = 0;
 char mode_SET = 0;
+long Set_Flow = 0;
 
 void main(void)
 {
+    PWR_ON = 0b1;
     arr_p = (void *)meash_arr;
     InitApp();
     initSPI();
- //   pid_init(&PID_cfg, &I_term, &D_term);
+    pid_init(&PID_cfg, &I_term, &D_term);
     get_settings();
     mode_MAN = 0;                                       // Init main control modes
     mode_AUTO = 0;
@@ -63,10 +65,14 @@ void main(void)
                 if(norm_num != prev_norm_num)
                     ROM_WR(0x10,norm_num);
             }
+            Set_Flow = (long)set_Q[norm_num];
+            if(ACTV == 2 | ACTV == 0)
+                pid_task(RESLT,Set_Flow,&PID_cfg);
             prev_norm_num = norm_num;
             lit_led(norm_arr[norm_num],rate_arr[arr_num],adc_conv_cnt);
             ADC_task(&ADC_data);
-            drive_pump(pwm_p,per_pwm_p);
+            set_PWM();
+        //    drive_pump(pwm_p,per_pwm_p);
         }
         else
         {

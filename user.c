@@ -194,7 +194,8 @@ void irq_tmr1()
 
 void measure(void)
 {
-    if(mes_num == 9)
+    
+    if(mes_num == measure_num)
         {
         int k = 0;
         // disable irqs, as we don't need new data in PER1
@@ -816,4 +817,22 @@ void get_settings(void)
         ADC_THR_v = 0x0081B320;                                                 // default threshold
     else
         ADC_THR_v = temp[0]<<24 | temp[1]<<16 | temp[2]<<8 | temp[3];           // previous calibration data
+}
+
+void set_PWM(void)
+{
+    if(((mass_locked && mode_AUTO) || mode_MAN)&&PWR_ON)
+    {
+        TRISCbits.RC2 = 0;                          // set PWM output
+        CCP1CONbits.DC1B = 0b11;                    // 2 LSB of CCP1 reg = 3, so we have 8 bit DUTY_CYCLE resolution  
+            PR2 = 0xFF;                                 // max tmr2 period (485HZ @ 8MHz)
+        T2CONbits.TMR2ON = 1;                       // start tmr2
+        CCP1CONbits.CCP1M = 0xF;                    // enable PWM on CCP1
+        
+        if(PID_cfg.PWM_rdy)
+            CCPR1L = PID_cfg.PWM;
+        PID_cfg.PWM_rdy = 0;
+    }
+    else
+        disable_pump();
 }

@@ -1,5 +1,5 @@
 
-#define grade 3                     /* grade for array */
+#define grade 0                     /* grade for array */
 #define measure_num 1<<grade        /* number of consequential measurments */
 #define ADC_threshold 0x81B320      /* threshold for mass bridge voltage */
 #define PWRON_time    9000          /* time to hold SET button to enable main cycle */
@@ -34,6 +34,7 @@ int binarySearch( unsigned long *tab1, unsigned long key, int high, int low);
 unsigned long sumarr(unsigned long arr[]);
 void InterruptHandlerHigh (void);
 void get_settings(void);
+void set_PWM(void);
 
 unsigned int norm_num;
 unsigned long PER0 = 0;                     // buffer #1 for active measurment
