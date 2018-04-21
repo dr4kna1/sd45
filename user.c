@@ -537,7 +537,6 @@ void prcd_but(void)
             }
             else
             {
-                calibration_act = !calibration_act;
                 mode_SET = 0;
             }
 		}

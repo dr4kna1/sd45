@@ -42,7 +42,7 @@ void main(void)
     arr_p = (void *)meash_arr;
     InitApp();
     initSPI();
-    pid_init(&PID_cfg, &I_term, &D_term);
+ //   pid_init(&PID_cfg, &I_term, &D_term);
     get_settings();
     mode_MAN = 0;                                       // Init main control modes
     mode_AUTO = 0;

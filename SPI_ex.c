@@ -96,7 +96,7 @@ void ADC_task(unsigned long *ADCData)
         {   
             cal_acc = cal_acc + temp;
             if(adc_conv_cnt > 1)
-                cal_acc = cal_acc >> 2; // constantly averaging ADC data
+                cal_acc = cal_acc >> 1; // constantly averaging ADC data
             if(adc_conv_cnt == ADC_CONV_TR)
             {
                 calibration_act  = 0;
@@ -107,7 +107,7 @@ void ADC_task(unsigned long *ADCData)
                 ROM_WR(ADC_THR_ADR + 3,(0x000000FF&cal_acc));
             }
         }
-        else if(temp > ADC_THR_v)
+        if(temp > ADC_THR_v)
             mass_lock_cnt += 1;
         else
         {

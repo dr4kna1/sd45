@@ -9,6 +9,7 @@
       <itemPath>system.h</itemPath>
       <itemPath>user.h</itemPath>
       <itemPath>tables.h</itemPath>
+      <itemPath>PID.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"
@@ -21,6 +22,7 @@
       <itemPath>configuration_bits.c</itemPath>
       <itemPath>main.c</itemPath>
       <itemPath>user.c</itemPath>
+      <itemPath>PID.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
