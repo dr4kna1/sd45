@@ -32,14 +32,20 @@ struct PID_cfg_s
     float Kd;
     float I_term;
     float D_term;
+    float P_term;
     long  PWM;
     char  PWM_rdy;
+    enum {REAL = 0, DIFF = 1, PTERM1 = 2, ITERM1 = 3, ITERM2 = 4, DTERM1 = 5,
+    DTERM2 = 6, PWM = 7, SCALE = 8, SCORE = 9} stage;
 };
 
 float I_term = 0;
 float D_term = 0;
+float P_term = 0;
+float  Diff = 0;
+float RealQ = 0;
 struct PID_cfg_s PID_cfg;
 
-void pid_init(struct PID_cfg_s *PID_cfg, float *I_term, float *D_term);
+void pid_init(struct PID_cfg_s *PID_cfg, float *I_term, float *D_term, float *P_term);
 void pid_task(unsigned long Measured, long Set, struct PID_cfg_s *PID);
 float calc_measure(unsigned long result);

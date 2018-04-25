@@ -40,11 +40,11 @@ long Set_Flow = 0;
 
 void main(void)
 {
-    PWR_ON = 0b1;
+//    PWR_ON = 0b1;
     arr_p = (void *)meash_arr;
     InitApp();
     initSPI();
-    pid_init(&PID_cfg, &I_term, &D_term);
+    pid_init(&PID_cfg, &I_term, &D_term, &P_term);
     get_settings();
     mode_MAN = 0;                                       // Init main control modes
     mode_AUTO = 0;
