@@ -67,6 +67,8 @@ extern unsigned char pump_led;
 extern unsigned char set_led;
 extern unsigned char led_state;
 unsigned char pwm_state = 0;
+    unsigned up=0;
+    unsigned down=0;
 /******************************************************************************/
 /* User Functions                                                             */
 /******************************************************************************/
@@ -132,7 +134,7 @@ void InitApp(void)
     CCP1CON = 0;      // Enable PWM 1
 
    /*CCP2*/
-    CCP2CONbits.CCP2M = 0x4;       // CCP2 Capture rising edge
+    CCP2CONbits.CCP2M = 0x5;       // CCP2 Capture rising edge
 
 }
 
@@ -599,7 +601,7 @@ void prcd_but(void)
 void drive_pump( unsigned int *num,  unsigned long *table)
 {
     const unsigned char ps = 1;//60;
-    
+
  // drive pump if mass present or manual guidance
     if(((mass_locked && mode_AUTO) || mode_MAN)&&PWR_ON)
     {
@@ -614,6 +616,8 @@ void drive_pump( unsigned int *num,  unsigned long *table)
             norma_8b = num[norm_num];               // then borrowing DUTY_CYCLE from table
             CCPR1L = norma_8b;
             pwm_state = 1;                          // next DC from compare RESLT and table per_pwm_arr
+            up = 0;
+            down = 0;
         }
         else if(pwm_state == 1)
         {
@@ -632,6 +636,7 @@ void drive_pump( unsigned int *num,  unsigned long *table)
                     if(ki == ps)
                     {
                         norma_8b = norma_8b - 1;
+                        down++;
                         if(norma_8b <= 2)   //if(norma_8b <= 10)
                             norma_8b = 2;  //norma_8b = 10;
                         CCPR1L = norma_8b;
@@ -644,6 +649,7 @@ void drive_pump( unsigned int *num,  unsigned long *table)
                     if(ki == ps)
                     {
                         norma_8b = norma_8b + 1;
+                        up++;
                         if(norma_8b > 231)
                             norma_8b = 231;
                         CCPR1L = norma_8b;
