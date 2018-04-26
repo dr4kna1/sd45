@@ -65,4 +65,4 @@ unsigned int pwron_cnt = 0;
 unsigned char  AUTO_rlsd = 0b1;
 unsigned char  AUTO_btn_hold = 0b0;
 unsigned char  AUTO_forbid = 0b0;
-
+unsigned char  PID_timer = 0;

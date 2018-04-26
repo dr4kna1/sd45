@@ -140,7 +140,7 @@ void InitApp(void)
 void irq_tmr3(void)
 {
     PIR2bits.TMR3IF = 0;
-
+        PID_timer++;
         PER0 = PER0 + 0xFFFF;
         if(PER0>0x4AC000)
         {
@@ -829,14 +829,18 @@ void set_PWM(void)
 {
     if(((mass_locked && mode_AUTO) || mode_MAN)&&PWR_ON)
     {
+        if(PID_cfg.PWM_rdy && PID_timer == 32)
+        {
         TRISCbits.RC2 = 0;                          // set PWM output
         CCP1CONbits.DC1B = 0b11;                    // 2 LSB of CCP1 reg = 3, so we have 8 bit DUTY_CYCLE resolution  
             PR2 = 0xFF;                                 // max tmr2 period (485HZ @ 8MHz)
         T2CONbits.TMR2ON = 1;                       // start tmr2
         CCP1CONbits.CCP1M = 0xF;                    // enable PWM on CCP1
         
-        if(PID_cfg.PWM_rdy)
+
             CCPR1L = PID_cfg.PWM;
+            PID_timer = 0;
+        }
         PID_cfg.PWM_rdy = 0;
     }
     else
