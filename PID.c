@@ -34,17 +34,21 @@ void pid_task(unsigned long Measured, long Set, struct PID_cfg_s *PID)
             break;
         case PTERM1 :
             PID->P_term = (PID->Kp) * Diff;
+            if(PID->P_term > 5000)
+                PID->P_term = 5000;
             PID->stage = ITERM1;
             break;
         case ITERM1 :
             PID->I_term = PID->I_term + PID->Ki * Diff;
-            if(PID->I_term > 8000)
-                PID->I_term = 8000;
+            if(PID->I_term > 5000)
+                PID->I_term = 5000;
             PID->stage = DTERM1;
             break;
         case ITERM2 : break;
         case DTERM1 :
             PID->D_term = Diff - PID->D_term;
+            if(PID->D_term > 5000)
+                PID->D_term = 5000;
             PID->stage = DTERM2;
             break;
         case DTERM2 :
@@ -79,9 +83,9 @@ float calc_measure(unsigned long result, long Set)
     float temp = 0;
     float K = 11.35;
     if(Set > 4200 && Set < 7500)
-        K = 10.5;
+        K = 10;
     else if (Set > 1200 && Set < 4300)
-        K = 12.5;
+        K = 11.5;
     else
         K = 11.35;
     temp = 60*2000000*K/(float)result;

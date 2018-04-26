@@ -213,6 +213,8 @@ void measure(void)
 //            PER2 = PER2>>grade;             // divide by grade
 //            PER2 = PER1[4];
             RESLT = PER1[0];
+            if(RESLT < 173821)
+                RESLT = 173821;
 //            PER2 = 0;                   // reset buffer
 
             k = 0;

@@ -68,6 +68,12 @@ void main(void)
             Set_Flow = set_Q[norm_num];
             if((mass_locked && mode_AUTO) || mode_MAN)
                 pid_task(RESLT,Set_Flow,&PID_cfg);
+            else
+            {
+                I_term = 0;
+                D_term = 0;
+                P_term = 0;
+            }
             prev_norm_num = norm_num;
             lit_led(norm_arr[norm_num],rate_arr[arr_num],adc_conv_cnt);
             ADC_task(&ADC_data);
