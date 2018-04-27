@@ -41,7 +41,6 @@ long Set_Flow = 0;
 void main(void)
 {
 //    PWR_ON = 0b1;
-    arr_p = (void *)meash_arr;
     InitApp();
     initSPI();
     pid_init(&PID_cfg, &I_term, &D_term, &P_term);
@@ -55,11 +54,7 @@ void main(void)
         if(PWR_ON)
         {
             measure();                                      // calculate flow based on feedback
-            if(f_measured == 1)                             // flow calculated
-                arr_num = binarySearch(arr_p,RESLT,767,0);  // set digit display with flow value
-            else
-            if(f_measured == 0 && ACTV == 2)                // flow measure timed-out/no signal from sensor
-                arr_num = 767;                              // null flow
+                             // null flow
             if(mode_SET)                                    // write chosen flow rate to ROM
             {
                 if(norm_num != prev_norm_num)
@@ -73,7 +68,7 @@ void main(void)
                 pid_reset(&PID_cfg);
             }
             prev_norm_num = norm_num;
-            lit_led(norm_arr[norm_num],rate_arr[arr_num],adc_conv_cnt);
+            lit_led(norm_arr[norm_num],0,adc_conv_cnt);
             ADC_task(&ADC_data);
             set_PWM();
         //    drive_pump(pwm_p,per_pwm_p);

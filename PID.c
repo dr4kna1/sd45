@@ -27,7 +27,6 @@ void pid_task(unsigned long Measured, long Set, struct PID_cfg_s *PID)
     {
         case REAL :
             RealQ = calc_measure(Measured, Set);
-            Real_var = (int)RealQ;
             PID->stage = DIFF;
             break;
         case DIFF :
@@ -44,9 +43,12 @@ void pid_task(unsigned long Measured, long Set, struct PID_cfg_s *PID)
             PID->I_term = PID->I_term + PID->Ki * Diff;
             if(PID->I_term > Term_upper_threshold)
                 PID->I_term = Term_upper_threshold;
+            PID->stage = ITERM2;
+            break;
+        case ITERM2 : 
+            Real_var = (int)(1.6*RealQ)>>4;
             PID->stage = DTERM1;
             break;
-        case ITERM2 : break;
         case DTERM1 :
             PID->D_term = Diff - PID->D_term;
             if(PID->D_term > Term_upper_threshold)
@@ -86,7 +88,7 @@ float calc_measure(unsigned long result, long Set)
     float temp = 0;
     float K = 11.35;
     if(Set > 5500 && Set < 7500)
-        K = 10;
+        K = 9;
     else if (Set > 1200 && Set < 5600)
         K = 11.5;
     else
@@ -104,4 +106,5 @@ void pid_reset(struct PID_cfg_s *PID)
     PID->PWM = 0;
     PID->PWM_rdy = 0;
     PID->stage = REAL;
+    Real_var = 0;
 }
