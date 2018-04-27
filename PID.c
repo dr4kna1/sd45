@@ -9,6 +9,7 @@ void pid_init(struct PID_cfg_s *PID_cfg, float *I_term, float *D_term, float *P_
     PID_cfg->D_term = *D_term;
     PID_cfg->P_term = *P_term;
     PID_cfg->PWM    = 255;
+    PID_cfg->PWM_var = 255;
     PID_cfg->PWM_rdy = 0;
     PID_cfg->stage  = REAL;
 }
@@ -26,6 +27,7 @@ void pid_task(unsigned long Measured, long Set, struct PID_cfg_s *PID)
     {
         case REAL :
             RealQ = calc_measure(Measured, Set);
+            Real_var = (int)RealQ;
             PID->stage = DIFF;
             break;
         case DIFF :
@@ -69,6 +71,7 @@ void pid_task(unsigned long Measured, long Set, struct PID_cfg_s *PID)
             if(PID->PWM < PWM_MAX)
                 PID->PWM = PWM_MAX;
             PID->PWM = 256 - PID->PWM;  // convert from duty cycle to duty ratio
+            PID->PWM_var = PID->PWM;
             PID->PWM_rdy = 1;
             PID->P_term = 0;
             RealQ = 0;

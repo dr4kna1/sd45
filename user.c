@@ -338,7 +338,7 @@ void lit_led(unsigned int str1,unsigned int str2, unsigned int adc_cnt)
                         if (service_info)
                         {
                             prcd_led1();
-                            nstr = (str2&0x0F00)>>8;
+                            nstr = (Real_var&0xF000)>>12;
                             PORTD = decode_str(nstr); break;                                          // lit '1'
                         }
                         else
@@ -346,14 +346,14 @@ void lit_led(unsigned int str1,unsigned int str2, unsigned int adc_cnt)
                     case 2  :
                         if (service_info)
                         {
-                            prcd_led2(); PORTD = decode_str((str2&0x00F0)>>4) | 0x10; break;    // suppress dot 0x10
+                            prcd_led2(); PORTD = decode_str((Real_var&0x0F00)>>8) | 0x10; break;    // suppress dot 0x10
                         }
                         else
                             break;
                     case 3  :
                         if (service_info)
                         {
-                            prcd_led3(); PORTD = decode_str(str2&0x000F) | 0x10; break;
+                            prcd_led3(); PORTD = decode_str(Real_var&0x00F0>>4) | 0x10; break;
                         }
                         else
                             break;
