@@ -70,9 +70,7 @@ void main(void)
                 pid_task(RESLT,Set_Flow,&PID_cfg);
             else
             {
-                I_term = 0;
-                D_term = 0;
-                P_term = 0;
+                pid_reset(&PID_cfg);
             }
             prev_norm_num = norm_num;
             lit_led(norm_arr[norm_num],rate_arr[arr_num],adc_conv_cnt);
@@ -91,6 +89,7 @@ void main(void)
             mode_MAN = 0;
             mode_AUTO = 0;
             mode_SET  = 0;
+            PID_timer = 32;
         }
     }
 }

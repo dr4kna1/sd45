@@ -1,5 +1,5 @@
 
-#define grade 0                     /* grade for array */
+#define grade 3                     /* grade for array */
 #define measure_num 1<<grade        /* number of consequential measurments */
 #define ADC_threshold 0x81B320      /* threshold for mass bridge voltage */
 #define PWRON_time    9000          /* time to hold SET button to enable main cycle */
@@ -65,4 +65,4 @@ unsigned int pwron_cnt = 0;
 unsigned char  AUTO_rlsd = 0b1;
 unsigned char  AUTO_btn_hold = 0b0;
 unsigned char  AUTO_forbid = 0b0;
-unsigned char  PID_timer = 0;
+unsigned char  PID_timer = 32;

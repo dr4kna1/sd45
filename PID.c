@@ -34,21 +34,21 @@ void pid_task(unsigned long Measured, long Set, struct PID_cfg_s *PID)
             break;
         case PTERM1 :
             PID->P_term = (PID->Kp) * Diff;
-            if(PID->P_term > 5000)
-                PID->P_term = 5000;
+            if(PID->P_term > Term_upper_threshold)
+                PID->P_term = Term_upper_threshold;
             PID->stage = ITERM1;
             break;
         case ITERM1 :
             PID->I_term = PID->I_term + PID->Ki * Diff;
-            if(PID->I_term > 5000)
-                PID->I_term = 5000;
+            if(PID->I_term > Term_upper_threshold)
+                PID->I_term = Term_upper_threshold;
             PID->stage = DTERM1;
             break;
         case ITERM2 : break;
         case DTERM1 :
             PID->D_term = Diff - PID->D_term;
-            if(PID->D_term > 5000)
-                PID->D_term = 5000;
+            if(PID->D_term > Term_upper_threshold)
+                PID->D_term = Term_upper_threshold;
             PID->stage = DTERM2;
             break;
         case DTERM2 :
@@ -64,10 +64,10 @@ void pid_task(unsigned long Measured, long Set, struct PID_cfg_s *PID)
             PID->stage = SCORE;
             break;
         case SCORE :
-            if(PID->PWM > 255) // constrain PWM range
-                PID->PWM = 255;
-            if(PID->PWM < 1)
-                PID->PWM = 1;
+            if(PID->PWM > PWM_MIN) // constrain PWM range
+                PID->PWM = PWM_MIN;
+            if(PID->PWM < PWM_MAX)
+                PID->PWM = PWM_MAX;
             PID->PWM = 256 - PID->PWM;  // convert from duty cycle to duty ratio
             PID->PWM_rdy = 1;
             PID->P_term = 0;
@@ -82,12 +82,23 @@ float calc_measure(unsigned long result, long Set)
 {
     float temp = 0;
     float K = 11.35;
-    if(Set > 4200 && Set < 7500)
+    if(Set > 5500 && Set < 7500)
         K = 10;
-    else if (Set > 1200 && Set < 4300)
+    else if (Set > 1200 && Set < 5600)
         K = 11.5;
     else
         K = 11.35;
     temp = 60*2000000*K/(float)result;
     return temp;
+}
+
+
+void pid_reset(struct PID_cfg_s *PID)
+{
+    PID->D_term = 0;
+    PID->I_term = 0;
+    PID->P_term = 0;
+    PID->PWM = 0;
+    PID->PWM_rdy = 0;
+    PID->stage = REAL;
 }
