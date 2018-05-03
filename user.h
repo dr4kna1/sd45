@@ -66,3 +66,10 @@ unsigned char  AUTO_rlsd = 0b1;
 unsigned char  AUTO_btn_hold = 0b0;
 unsigned char  AUTO_forbid = 0b0;
 unsigned char  PID_timer = 32;
+
+unsigned char  MAN_rlsd = 0b1;
+unsigned char  MAN_btn_hold = 0b0;
+unsigned char  MAN_forbid = 0b0;
+unsigned int   man_cnt = 0;
+bit            manpwm_info = 0b0;
+bit            manpwm_info_prev = 0b0;

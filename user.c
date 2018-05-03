@@ -325,7 +325,7 @@ void lit_led(unsigned int str1,unsigned int str2, unsigned int adc_cnt)
     indMANUAL   = mode_MAN;
     indSET      = mode_SET;
     
-    if(calibration_info == 0)
+    if(calibration_info == 0 & manpwm_info == 0)
     {
         // 7-seg LEDs
         if(led_state < 7)
@@ -371,7 +371,53 @@ void lit_led(unsigned int str1,unsigned int str2, unsigned int adc_cnt)
     
        led_state++;
     }
-    else
+    else if (calibration_info == 0 & manpwm_info == 1)
+    {
+        // 7-seg LEDs
+        if(led_state < 7)
+          {
+              PORTD = 0xFF;
+              switch (led_state)
+                {
+                    case 1  :    
+                        // LED1 on, other off
+                        if (service_info)
+                        {
+                            prcd_led1();
+                            nstr = (str2&0x0F00)>>8;
+                            PORTD = decode_str(nstr); break;                                          // lit '1'
+                        }
+                        else
+                            break;
+                    case 2  :
+                        if (service_info)
+                        {
+                            prcd_led2(); PORTD = decode_str((str2&0x00F0)>>4) | 0x10; break;    // suppress dot 0x10
+                        }
+                        else
+                            break;
+                    case 3  :
+                        if (service_info)
+                        {
+                            prcd_led3(); PORTD = decode_str(str2&0x000F) | 0x10; break;
+                        }
+                        else
+                            break;
+                    case 4  :
+                        prcd_led4(); PORTD = 0x44 | 0x10; break;
+                    case 5  :
+                        prcd_led5(); PORTD = 0xA0 | 0x10; break;
+                    case 6  :
+                        prcd_led6(); PORTD = 0xE0 | 0x10; break;
+                    default: break;
+                }
+          }
+            else
+                led_state = 0;
+    
+       led_state++;        
+    }
+    else if (calibration_info == 1)
     {
         if(led_state < 7)
         {
@@ -584,10 +630,39 @@ void prcd_but(void)
 		}
             prev_AUTO = fAUTO;
 /*-----------------------------------------------------------------------*/
+        if(!fMAN & !MAN_forbid)
+        {
+            man_cnt++;
+            manpwm_info_prev = 0b0;
+        }
+        else
+            man_cnt = 0;
+        if(man_cnt == 3000)
+        {
+            MAN_btn_hold = 0b1;
+            MAN_rlsd     = 0b0;
+            man_cnt      = 0;
+        }
+        if(MAN_btn_hold)
+        {
+            MAN_btn_hold = 0b0;
+            manpwm_info_prev = manpwm_info;
+            manpwm_info = !manpwm_info;
+            man_cnt = 0;
+        }
+        if(!MAN_rlsd)
+            MAN_forbid = 0b1;
+        else
+            MAN_forbid = 0b0;
+            
 		if(fMAN > prev_MAN)
 		{
-			mode_MAN = !mode_MAN;
-			mode_AUTO = 0;
+            if(!manpwm_info & !calibration_info)
+            {
+    			mode_MAN = !mode_MAN;
+        		mode_AUTO = 0;
+            }
+            MAN_rlsd = 0b1;
 		}
 		prev_MAN = fMAN;
     }
