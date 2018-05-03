@@ -36,7 +36,7 @@ struct PID_cfg_s
     float I_term;
     float D_term;
     float P_term;
-    long  PWM;
+    unsigned long  PWM;
     char  PWM_rdy;
     enum {REAL = 0, DIFF = 1, PTERM1 = 2, ITERM1 = 3, ITERM2 = 4, DTERM1 = 5,
     DTERM2 = 6, PWM = 7, SCALE = 8, SCORE = 9} stage;

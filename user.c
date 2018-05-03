@@ -371,7 +371,7 @@ void lit_led(unsigned int str1,unsigned int str2, unsigned int adc_cnt)
     
        led_state++;
     }
-    else if (calibration_info == 0 & manpwm_info == 1)
+    else if (calibration_info == 0 & manpwm_info == 1)  // Manual PWM
     {
         // 7-seg LEDs
         if(led_state < 7)
@@ -381,34 +381,17 @@ void lit_led(unsigned int str1,unsigned int str2, unsigned int adc_cnt)
                 {
                     case 1  :    
                         // LED1 on, other off
-                        if (service_info)
-                        {
-                            prcd_led1();
-                            nstr = (str2&0x0F00)>>8;
-                            PORTD = decode_str(nstr); break;                                          // lit '1'
-                        }
-                        else
-                            break;
+                        prcd_led1(); PORTD = decode_str((PID_cfg.PWM&0x0F00)>>8) | 0x10; break;
                     case 2  :
-                        if (service_info)
-                        {
-                            prcd_led2(); PORTD = decode_str((str2&0x00F0)>>4) | 0x10; break;    // suppress dot 0x10
-                        }
-                        else
-                            break;
+                        prcd_led2(); PORTD = decode_str((PID_cfg.PWM&0x00F0)>>4) | 0x10; break;    // suppress dot 0x10
                     case 3  :
-                        if (service_info)
-                        {
-                            prcd_led3(); PORTD = decode_str(str2&0x000F) | 0x10; break;
-                        }
-                        else
-                            break;
+                        prcd_led3(); PORTD = decode_str(PID_cfg.PWM&0x000F) | 0x10; break;
                     case 4  :
-                        prcd_led4(); PORTD = 0x44 | 0x10; break;
+                        prcd_led4(); PORTD = 0x44 | 0x10; break;    //"P"
                     case 5  :
-                        prcd_led5(); PORTD = 0xA0 | 0x10; break;
+                        prcd_led5(); PORTD = 0xA0 | 0x10; break;    //"Y"
                     case 6  :
-                        prcd_led6(); PORTD = 0xE0 | 0x10; break;
+                        prcd_led6(); PORTD = 0xE0 | 0x10; break;    //"?"
                     default: break;
                 }
           }
@@ -555,6 +538,14 @@ void prcd_but(void)
 				if(norm_num >= 71)
 						norm_num = 70;
 			}
+            if(manpwm_info)
+            {   
+                if(PID_cfg.PWM < 255)
+                    PID_cfg.PWM++;
+                else
+                    PID_cfg.PWM = 255;
+                PID_cfg.PWM_rdy = 1;
+            }
 		}
 		prev_UP = fUP;
 /*-----------------------------------------------------------------------*/
@@ -569,6 +560,11 @@ void prcd_but(void)
 				else
 					norm_num--;
 			}
+            if(manpwm_info)
+            {
+                PID_cfg.PWM--;
+                PID_cfg.PWM_rdy = 1;
+            }
 		}
 		prev_DOWN = fDOWN;
 	
@@ -894,7 +890,7 @@ void get_settings(void)
 
 void set_PWM(void)
 {
-    if(((mass_locked && mode_AUTO) || mode_MAN)&&PWR_ON)
+    if(((mass_locked && mode_AUTO) || mode_MAN || manpwm_info)&&PWR_ON)
     {
         if(PID_cfg.PWM_rdy && PID_timer >= 32)
         {

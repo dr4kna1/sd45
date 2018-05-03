@@ -67,7 +67,8 @@ void main(void)
             }
             Set_Flow = set_Q[norm_num];
             if((mass_locked && mode_AUTO) || mode_MAN)
-                pid_task(RESLT,Set_Flow,&PID_cfg);
+                if(!manpwm_info)
+                    pid_task(RESLT,Set_Flow,&PID_cfg);
             else
             {
                 pid_reset(&PID_cfg);
