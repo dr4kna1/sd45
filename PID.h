@@ -48,6 +48,7 @@ float D_term = 0;
 float P_term = 0;
 float  Diff = 0;
 float RealQ = 0;
+float prev_RealQ = 0;
 int Real_var;
 struct PID_cfg_s PID_cfg;
 

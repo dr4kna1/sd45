@@ -1,4 +1,5 @@
 #include "PID.h"
+#include "user.h"
 
 void pid_init(struct PID_cfg_s *PID_cfg, float *I_term, float *D_term, float *P_term)
 {
@@ -43,10 +44,15 @@ void pid_task(unsigned long Measured, long Set, struct PID_cfg_s *PID)
             PID->I_term = PID->I_term + PID->Ki * Diff;
             if(PID->I_term > Term_upper_threshold)
                 PID->I_term = Term_upper_threshold;
-            PID->stage = ITERM2;
+            if(service_info)
+                PID->stage = ITERM2;
+            else
+                PID->stage = DTERM1;
             break;
-        case ITERM2 : 
-            Real_var = (int)(1.6*RealQ)>>4;
+        case ITERM2 :
+                if(RealQ != prev_RealQ)
+                    Real_var = (int)(1.6*RealQ)>>4;
+                prev_RealQ = RealQ;
             PID->stage = DTERM1;
             break;
         case DTERM1 :
