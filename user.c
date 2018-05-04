@@ -141,15 +141,9 @@ void irq_tmr3(void)
 {
     PIR2bits.TMR3IF = 0;
         PID_timer++;
-        if(PID_timer > 32)
-            PID_timer = 32;
-        PER0 = PER0 + 0xFFFF;
-        if(PER0>0x4AC000)
-        {
-            RESLT = 2840238;
-            ACTV = 2;
-            f_measured = 0;
-        }
+        if(PID_timer > PID_period)
+            PID_timer = PID_period;
+        PER0 += 0x10000ul;
 }
 
 /* Capture event on input and load TMR3 value */
@@ -157,26 +151,23 @@ void irq_ccp2(void)
 {
     //clear CCP2 irq flag
     PIR2bits.CCP2IF = 0;
-    if((mes_num) > 0)
-    {
-        ACTV = 1;
-    }                       // period measurment started
 
-    if((mes_num <= measure_num) & ACTV==1)
+    if(tmr_counting == 0)
     {
-        PER0 = PER0+((CCPR2H<<8) + CCPR2L);
-        PER1[mes_num-1] = PER0;
+        T3CONbits.TMR3ON = 1;
         PER0 = 0;
-
-         /*Enable irqs there if needed*/
-        j = !j;
-        indPUMP =  j;
+        tmr_counting = 1;
     }
-    TMR3H = 0;                      // reload timer
-    TMR3L = 0;
-
-    mes_num++;                      // incr meashurments cntr
-
+    else
+    {
+        T3CONbits.TMR3ON = 0;
+        PER0 |= ((CCPR2H<<8) | CCPR2L);
+        RESLT = PER0;
+        TMR3H = TMR3L = 0;
+        tmr_counting = 0;
+    }
+    j = !j;
+    indPUMP =  j;
 }
 
 void irq_tmr1()
@@ -195,7 +186,6 @@ void irq_tmr1()
 
 void measure(void)
 {
-    
     if(mes_num == measure_num)
         {
         int k = 0;
@@ -461,7 +451,7 @@ int decode_str(int str)
     else if(str == 0x7)         dec_str = 0xC2;
     else if(str == 0x8)         dec_str = 0x00;
     else if(str == 0x9)         dec_str = 0x80;
-    else if(str == 0xA)         dec_str = 0xB0;
+    else if(str == 0xA)         dec_str = 0x40;
     else if(str == 0xB)         dec_str = 0x21;
     else if(str == 0xC)         dec_str = 0x07;
     else if(str == 0xD)         dec_str = 0x28;
@@ -892,7 +882,7 @@ void set_PWM(void)
 {
     if(((mass_locked && mode_AUTO) || mode_MAN || manpwm_info)&&PWR_ON)
     {
-        if(PID_cfg.PWM_rdy && PID_timer >= 32)
+        if(PID_cfg.PWM_rdy)// && PID_timer >= PID_period)
         {
         TRISCbits.RC2 = 0;                          // set PWM output
         CCP1CONbits.DC1B = 0b11;                    // 2 LSB of CCP1 reg = 3, so we have 8 bit DUTY_CYCLE resolution  

@@ -54,12 +54,7 @@ void main(void)
         prcd_but();                                     // get buttons state
         if(PWR_ON)
         {
-            measure();                                      // calculate flow based on feedback
-            if(f_measured == 1)                             // flow calculated
-                arr_num = binarySearch(arr_p,RESLT,767,0);  // set digit display with flow value
-            else
-            if(f_measured == 0 && ACTV == 2)                // flow measure timed-out/no signal from sensor
-                arr_num = 767;                              // null flow
+            arr_num = binarySearch(arr_p,RESLT,767,0);      // get decimal flow via table
             if(mode_SET)                                    // write chosen flow rate to ROM
             {
                 if(norm_num != prev_norm_num)

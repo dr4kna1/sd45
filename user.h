@@ -2,10 +2,11 @@
 #define grade 3                     /* grade for array */
 #define measure_num 1<<grade        /* number of consequential measurments */
 #define ADC_threshold 0x81B320      /* threshold for mass bridge voltage */
-#define PWRON_time    9000          /* time to hold SET button to enable main cycle */
+#define PWRON_time    2700          /* time to hold SET button to enable main cycle */
 #define PWROFF_time   54000
 #define ADC_THR_ADR   0x20
 #define ADC_CONV_TR   63            /* number of sequential ADC ocnversion during calibration */
+#define PID_period    16            /* delayin applying PID regulation [TMR3 periods] */
 
 void InitApp(void);                 /* I/O and Peripheral Initialization */
 void irq_tmr3(void);                /* timer 3 irq handler */
@@ -73,3 +74,4 @@ unsigned char  MAN_forbid = 0b0;
 unsigned int   man_cnt = 0;
 bit            manpwm_info = 0b0;
 bit            manpwm_info_prev = 0b0;
+volatile unsigned char tmr_counting = 0;
