@@ -18,6 +18,7 @@
 #include "macros.h"
 #include "SPI_ex.h"
 #include "tables.h"        /* calibrated flow, PWM and other tabe values */
+#include "PID.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -30,26 +31,21 @@ unsigned char fSET = 1;
 unsigned char fMAN = 1;
 unsigned char fAUTO = 1;
 unsigned char f_measured = 0;
-unsigned char ADC_ID = 0;
-unsigned char ADC_err = 0;
+
 
 char mode_MAN = 0;
 char mode_AUTO = 0;
 char mode_SET = 0;
+long Set_Flow = 0;
 
 void main(void)
 {
+//    PWR_ON = 0b1;
     arr_p = (void *)meash_arr;
     InitApp();
     initSPI();
-    ADC_ID = reset_ADC();
-    if (ADC_ID == 0x5B | ADC_ID == 0x5A)
-        ADC_err = 0;
-    else
-        ADC_err = 1;
-    norm_num = ROM_RD(0x10);
-    if(norm_num > 71)                                   // check for 1st ROM read
-        norm_num = 0x14;
+    pid_init(&PID_cfg, &I_term, &D_term, &P_term);
+    get_settings();
     mode_MAN = 0;                                       // Init main control modes
     mode_AUTO = 0;
     mode_SET = 0;
@@ -69,10 +65,18 @@ void main(void)
                 if(norm_num != prev_norm_num)
                     ROM_WR(0x10,norm_num);
             }
+            Set_Flow = set_Q[norm_num];
+            if((mass_locked && mode_AUTO) || mode_MAN)
+                pid_task(RESLT,Set_Flow,&PID_cfg);
+            else
+            {
+                pid_reset(&PID_cfg);
+            }
             prev_norm_num = norm_num;
-            lit_led(norm_arr[norm_num],rate_arr[arr_num]);
+            lit_led(norm_arr[norm_num],rate_arr[arr_num],adc_conv_cnt);
             ADC_task(&ADC_data);
-            drive_pump(pwm_p,per_pwm_p);
+            set_PWM();
+        //    drive_pump(pwm_p,per_pwm_p);
         }
         else
         {
@@ -85,6 +89,7 @@ void main(void)
             mode_MAN = 0;
             mode_AUTO = 0;
             mode_SET  = 0;
+            PID_timer = 32;
         }
     }
 }
