@@ -151,23 +151,47 @@ void irq_ccp2(void)
 {
     //clear CCP2 irq flag
     PIR2bits.CCP2IF = 0;
-
+    //disable irqs
+    PIE2bits.TMR3IE = 0;
+    PIE2bits.CCP2IE = 0;
+#if decimate_msre == 1
     if(tmr_counting == 0)
     {
         T3CONbits.TMR3ON = 1;
         PER0 = 0;
-        tmr_counting = 1;
+//        if(mes_num > measure_num)
+            tmr_counting = 1;
+        mes_num++;
     }
     else
     {
         T3CONbits.TMR3ON = 0;
         PER0 |= ((CCPR2H<<8) | CCPR2L);
-        RESLT = PER0;
+        if(PER0 > 0x4AC000)
+        {
+            RESLT = RESLT;
+            tmr_overflow_evn++;
+        }
+        else
+            RESLT = PER0;
         TMR3H = TMR3L = 0;
         tmr_counting = 0;
+        mes_num = 0;
     }
+#elif decimate_msre == 0
+    T3CONbits.TMR3ON = 1;
+    PER0 |= ((CCPR2H<<8) | CCPR2L);
+    if(PER0 > 0x4AC000)
+        RESLT = 2840238;
+    else
+        RESLT = PER0;
+    TMR3H = TMR3L = 0;
+    PER0 = 0;
+#endif
     j = !j;
     indPUMP =  j;
+    PIE2bits.TMR3IE = 1;
+    PIE2bits.CCP2IE = 1;
 }
 
 void irq_tmr1()

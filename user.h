@@ -7,6 +7,7 @@
 #define ADC_THR_ADR   0x20
 #define ADC_CONV_TR   63            /* number of sequential ADC ocnversion during calibration */
 #define PID_period    16            /* delayin applying PID regulation [TMR3 periods] */
+#define decimate_msre 1             /* get every second impulse */
 
 void InitApp(void);                 /* I/O and Peripheral Initialization */
 void irq_tmr3(void);                /* timer 3 irq handler */
@@ -38,10 +39,10 @@ void get_settings(void);
 void set_PWM(void);
 
 unsigned int norm_num;
-unsigned long PER0 = 0;                     // buffer #1 for active measurment
+volatile unsigned long PER0 = 0;                     // buffer #1 for active measurment
 unsigned long PER1[measure_num] = {0};
 unsigned long PER2 = 0;                     // sum of 8 measurments
-unsigned long RESLT = 0;                    // normal result of 8 measures
+volatile unsigned long RESLT = 0;                    // normal result of 8 measures
 char ACTV = 0b0;                            // controller state
 int mes_num    = 0;                         // number of measurments
 int arr_num = 767;                          // array index for measured flow table
@@ -75,3 +76,4 @@ unsigned int   man_cnt = 0;
 bit            manpwm_info = 0b0;
 bit            manpwm_info_prev = 0b0;
 volatile unsigned char tmr_counting = 0;
+unsigned int tmr_overflow_evn = 0;
