@@ -143,6 +143,10 @@ void irq_tmr3(void)
         if(PID_timer > PID_period)
             PID_timer = PID_period;
         PER0 += 0x10000ul;
+        if(PER0 > 0x4AC000)
+        {
+            PER0 = 0x4AC000;
+        }
 }
 
 /* Capture event on input and load TMR3 value */
@@ -166,7 +170,8 @@ void irq_ccp2(void)
     {
         T3CONbits.TMR3ON = 0;
         active_evn++;
-        PER0 |= ((CCPR2H<<8) | CCPR2L);
+        int temp = ((CCPR2H<<8) + CCPR2L);
+        PER0 = PER0 + temp;
         if(PER0 > 0x4AC000)
         {
             RESLT = RESLT;
