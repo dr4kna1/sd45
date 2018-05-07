@@ -165,11 +165,13 @@ void irq_ccp2(void)
     else
     {
         T3CONbits.TMR3ON = 0;
+        active_evn++;
         PER0 |= ((CCPR2H<<8) | CCPR2L);
         if(PER0 > 0x4AC000)
         {
             RESLT = RESLT;
             tmr_overflow_evn++;
+            PER0 = 0;
         }
         else
             RESLT = PER0;

@@ -58,17 +58,18 @@ void main(void)
             if(mode_SET)                                    // write chosen flow rate to ROM
             {
                 if(norm_num != prev_norm_num)
-                    ROM_WR(0x10,norm_num);
+                    ROM_WR(0X10,norm_num);
             }
             Set_Flow = set_Q[norm_num];
             if((mass_locked && mode_AUTO) || mode_MAN)
             {
                 if(!manpwm_info)
                     pid_task(RESLT,Set_Flow,&PID_cfg);
+                else
+                    pid_reset(&PID_cfg);
             }
             else
             {
-                pid_reset(&PID_cfg);
                 RESLT = 2840238;
             }
             prev_norm_num = norm_num;

@@ -95,3 +95,4 @@ bit            manpwm_info = 0b0;
 bit            manpwm_info_prev = 0b0;
 volatile unsigned char tmr_counting = 0;
 unsigned int tmr_overflow_evn = 0;
+unsigned int active_evn       = 0;
