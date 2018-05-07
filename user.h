@@ -9,6 +9,7 @@
 #define PID_period    16            /* delayin applying PID regulation [TMR3 periods] */
 #define decimate_msre 1             /* get every second impulse */
 #define OSC_prescale  1             /* internalosc prescaler value */
+#define tmr3_prescale 1             /* timer3 prescaler */
 
 #if OSC_prescale == 1
     #define _PRESC  0b111;            // 8 MHz INTOSC
@@ -27,6 +28,21 @@
     #define Fsys    2000000           // sys clock/4
 #endif
 
+#if tmr3_prescale == 1
+    #define _tmr3_presc 0              //  1:1
+    #define tmr3_freq   Fsys/1
+#elif tmr3_prescale == 2
+    #define _tmr3_presc 1              //  1:2
+    #define tmr3_freq   Fsys/2
+#elif tmr3_prescale == 4
+    #define _tmr3_presc 2              //  1:4
+    #define tmr3_freq   Fsys/4
+#elif tmr3_prescale == 8
+    #define _tmr3_presc 3              //  1:8
+    #define tmr3_freq   Fsys/8
+#else
+    #define _tmr3_presc 0              //  1:1
+#endif
 void InitApp(void);                 /* I/O and Peripheral Initialization */
 void irq_tmr3(void);                /* timer 3 irq handler */
 void irq_tmr1(void);

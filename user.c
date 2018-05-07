@@ -121,7 +121,7 @@ void InitApp(void)
     PR2 = 0xFF;
 
      /* Timer3 */
-    T3CONbits.T3CKPS = 0b00;             // prescaler 1:1
+    T3CONbits.T3CKPS = _tmr3_presc;             // prescaler 1:1
     T3CONbits.T3CCP2 = 0;           // TmR3 clk src for CCP2
     T3CONbits.T3CCP1 = 1;           // TmR1 clk src for CCP1
     T3CONbits.TMR3ON = 1;
