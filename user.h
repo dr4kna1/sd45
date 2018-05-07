@@ -25,7 +25,7 @@
 #else
     #define _PRESC  0b111;            // 8 MHz default
     #define Fsys    2000000           // sys clock/4
-#endifs
+#endif
 
 void InitApp(void);                 /* I/O and Peripheral Initialization */
 void irq_tmr3(void);                /* timer 3 irq handler */
