@@ -73,7 +73,7 @@ unsigned char pwm_state = 0;
 
 void InitApp(void)
 {
-    OSCCONbits.IRCF = 0b111;            // 8 MHz INTOSC
+    OSCCONbits.IRCF = _PRESC;            // 8 MHz INTOSC
     PORTA = 0x00;
     TRISA = 0x00;
 
@@ -102,7 +102,6 @@ void InitApp(void)
     PIE2bits.TMR3IE = 1;            // irq enabled
 
     PIE2bits.CCP2IE = 1;            // enable irq CCP2
-    PIE1bits.SSPIE = 1;
 
     /* TIMER0 */
     T0CONbits.T08BIT = 0;       // 0 - 16 bit mode; 1 - 8 bit
@@ -132,7 +131,7 @@ void InitApp(void)
     CCP1CON = 0;      // Enable PWM 1
 
    /*CCP2*/
-    CCP2CONbits.CCP2M = 0x4;       // CCP2 Capture rising edge
+    CCP2CONbits.CCP2M = 0x5;       // CCP2 Capture rising edge
 
 }
 

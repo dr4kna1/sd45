@@ -1,4 +1,5 @@
 #include "PID.h"
+#include "user.h"
 
 void pid_init(struct PID_cfg_s *PID_cfg, float *I_term, float *D_term, float *P_term)
 {
@@ -88,7 +89,7 @@ float calc_measure(unsigned long result, long Set)
         K = 11.5;
     else
         K = 11.35;
-    temp = 60*2000000*K/(float)result;
+    temp = 60*Fsys*K/(float)result;
     return temp;
 }
 

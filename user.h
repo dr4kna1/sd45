@@ -8,6 +8,24 @@
 #define ADC_CONV_TR   63            /* number of sequential ADC ocnversion during calibration */
 #define PID_period    16            /* delayin applying PID regulation [TMR3 periods] */
 #define decimate_msre 1             /* get every second impulse */
+#define OSC_prescale  1             /* internalosc prescaler value */
+
+#if OSC_prescale == 1
+    #define _PRESC  0b111;            // 8 MHz INTOSC
+    #define Fsys    2000000           // sys clock/4
+#elif OSC_prescale == 2
+    #define _PRESC  0b110;            // 4 MHz INTOSC
+    #define Fsys    1000000           // sys clock/4
+#elif OSC_prescale == 4
+    #define _PRESC   0b101;           // 2 MHz INTOSC
+    #define Fsys    500000           // sys clock/4
+#elif OSC_prescale == 8
+    #define _PRESC   0b100;           // 1 MHz INTOSC
+    #define Fsys     250000           // sys clock/4
+#else
+    #define _PRESC  0b111;            // 8 MHz default
+    #define Fsys    2000000           // sys clock/4
+#endifs
 
 void InitApp(void);                 /* I/O and Peripheral Initialization */
 void irq_tmr3(void);                /* timer 3 irq handler */

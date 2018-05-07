@@ -62,11 +62,14 @@ void main(void)
             }
             Set_Flow = set_Q[norm_num];
             if((mass_locked && mode_AUTO) || mode_MAN)
+            {
                 if(!manpwm_info)
                     pid_task(RESLT,Set_Flow,&PID_cfg);
+            }
             else
             {
                 pid_reset(&PID_cfg);
+                RESLT = 2840238;
             }
             prev_norm_num = norm_num;
             lit_led(norm_arr[norm_num],rate_arr[arr_num],adc_conv_cnt);
@@ -106,9 +109,4 @@ void interrupt sys_irq (void)
   {
      irq_tmr1();
   }
-  else if (PIR1bits.SSPIF)
-  {
-      PIR1bits.SSPIF = 0;
-  }
-
 }
