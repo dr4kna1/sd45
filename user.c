@@ -131,7 +131,7 @@ void InitApp(void)
     CCP1CON = 0;      // Enable PWM 1
 
    /*CCP2*/
-    CCP2CONbits.CCP2M = 0x5;       // CCP2 Capture rising edge
+    CCP2CONbits.CCP2M = 0x4;       // CCP2 Capture rising edge
 
 }
 
@@ -142,11 +142,7 @@ void irq_tmr3(void)
         PID_timer++;
         if(PID_timer > PID_period)
             PID_timer = PID_period;
-        PER0 += 0x10000ul;
-        if(PER0 > 0x4AC000)
-        {
-            PER0 = 0x4AC000;
-        }
+        PER0 = PER0 + 0xFFFF;
 }
 
 /* Capture event on input and load TMR3 value */
@@ -170,9 +166,9 @@ void irq_ccp2(void)
     {
         T3CONbits.TMR3ON = 0;
         active_evn++;
-        int temp = ((CCPR2H<<8) + CCPR2L);
+        unsigned temp = ((CCPR2H<<8) + CCPR2L);
         PER0 = PER0 + temp;
-        if(PER0 > 0x4AC000)
+        if(PER0 > 0x4AC000 | PER0 < 172500)
         {
             RESLT = RESLT;
             tmr_overflow_evn++;
