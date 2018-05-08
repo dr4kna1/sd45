@@ -84,7 +84,7 @@ float calc_measure(unsigned long result, long Set)
     float temp = 0;
     float K = 11.35;
     if(Set > 5500 && Set < 7500)
-        K = 10;
+        K = 11.3;
     else if (Set > 1200 && Set < 5600)
         K = 11.5;
     else
