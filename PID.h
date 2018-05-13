@@ -24,7 +24,7 @@ extern "C" {
 #define pid_Kp  4        // proportional coefficient
 #define pid_Ki  0.001    // integral coefficient
 #define pid_Kd  0.03     // differential coefficient
-#define Term_upper_threshold 5000 // up boundary of pid terms
+#define Term_upper_threshold 8000 // up boundary of pid terms
 #define PWM_MAX 5
 #define PWM_MIN 255
 
@@ -36,7 +36,7 @@ struct PID_cfg_s
     float I_term;
     float D_term;
     float P_term;
-    long  PWM;
+    unsigned long  PWM;
     char  PWM_rdy;
     enum {REAL = 0, DIFF = 1, PTERM1 = 2, ITERM1 = 3, ITERM2 = 4, DTERM1 = 5,
     DTERM2 = 6, PWM = 7, SCALE = 8, SCORE = 9} stage;

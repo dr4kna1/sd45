@@ -73,7 +73,7 @@ unsigned char pwm_state = 0;
 
 void InitApp(void)
 {
-    OSCCONbits.IRCF = 0b111;            // 8 MHz INTOSC
+    OSCCONbits.IRCF = _PRESC;            // 8 MHz INTOSC
     PORTA = 0x00;
     TRISA = 0x00;
 
@@ -102,7 +102,6 @@ void InitApp(void)
     PIE2bits.TMR3IE = 1;            // irq enabled
 
     PIE2bits.CCP2IE = 1;            // enable irq CCP2
-    PIE1bits.SSPIE = 1;
 
     /* TIMER0 */
     T0CONbits.T08BIT = 0;       // 0 - 16 bit mode; 1 - 8 bit
@@ -122,7 +121,7 @@ void InitApp(void)
     PR2 = 0xFF;
 
      /* Timer3 */
-    T3CONbits.T3CKPS = 0b00;             // prescaler 1:1
+    T3CONbits.T3CKPS = _tmr3_presc;             // prescaler 1:1
     T3CONbits.T3CCP2 = 0;           // TmR3 clk src for CCP2
     T3CONbits.T3CCP1 = 1;           // TmR1 clk src for CCP1
     T3CONbits.TMR3ON = 1;
@@ -141,15 +140,9 @@ void irq_tmr3(void)
 {
     PIR2bits.TMR3IF = 0;
         PID_timer++;
-        if(PID_timer > 32)
-            PID_timer = 32;
+        if(PID_timer > PID_period)
+            PID_timer = PID_period;
         PER0 = PER0 + 0xFFFF;
-        if(PER0>0x4AC000)
-        {
-            RESLT = 2840238;
-            ACTV = 2;
-            f_measured = 0;
-        }
 }
 
 /* Capture event on input and load TMR3 value */
@@ -157,26 +150,50 @@ void irq_ccp2(void)
 {
     //clear CCP2 irq flag
     PIR2bits.CCP2IF = 0;
-    if((mes_num) > 0)
+    //disable irqs
+    PIE2bits.TMR3IE = 0;
+    PIE2bits.CCP2IE = 0;
+#if decimate_msre == 1
+    if(tmr_counting == 0)
     {
-        ACTV = 1;
-    }                       // period measurment started
-
-    if((mes_num <= measure_num) & ACTV==1)
-    {
-        PER0 = PER0+((CCPR2H<<8) + CCPR2L);
-        PER1[mes_num-1] = PER0;
+        T3CONbits.TMR3ON = 1;
         PER0 = 0;
-
-         /*Enable irqs there if needed*/
-        j = !j;
-        indPUMP =  j;
+//        if(mes_num > measure_num)
+            tmr_counting = 1;
+        mes_num++;
     }
-    TMR3H = 0;                      // reload timer
-    TMR3L = 0;
-
-    mes_num++;                      // incr meashurments cntr
-
+    else
+    {
+        T3CONbits.TMR3ON = 0;
+        active_evn++;
+        unsigned temp = ((CCPR2H<<8) + CCPR2L);
+        PER0 = PER0 + temp;
+        if(PER0 > 0x4AC000 | PER0 < 172500)
+        {
+            RESLT = RESLT;
+            tmr_overflow_evn++;
+            PER0 = 0;
+        }
+        else
+            RESLT = PER0;
+        TMR3H = TMR3L = 0;
+        tmr_counting = 0;
+        mes_num = 0;
+    }
+#elif decimate_msre == 0
+    T3CONbits.TMR3ON = 1;
+    PER0 |= ((CCPR2H<<8) | CCPR2L);
+    if(PER0 > 0x4AC000)
+        RESLT = 2840238;
+    else
+        RESLT = PER0;
+    TMR3H = TMR3L = 0;
+    PER0 = 0;
+#endif
+    j = !j;
+    indPUMP =  j;
+    PIE2bits.TMR3IE = 1;
+    PIE2bits.CCP2IE = 1;
 }
 
 void irq_tmr1()
@@ -195,7 +212,6 @@ void irq_tmr1()
 
 void measure(void)
 {
-    
     if(mes_num == measure_num)
         {
         int k = 0;
@@ -325,7 +341,7 @@ void lit_led(unsigned int str1,unsigned int str2, unsigned int adc_cnt)
     indMANUAL   = mode_MAN;
     indSET      = mode_SET;
     
-    if(calibration_info == 0)
+    if(calibration_info == 0 & manpwm_info == 0)
     {
         // 7-seg LEDs
         if(led_state < 7)
@@ -371,7 +387,36 @@ void lit_led(unsigned int str1,unsigned int str2, unsigned int adc_cnt)
     
        led_state++;
     }
-    else
+    else if (calibration_info == 0 & manpwm_info == 1)  // Manual PWM
+    {
+        // 7-seg LEDs
+        if(led_state < 7)
+          {
+              PORTD = 0xFF;
+              switch (led_state)
+                {
+                    case 1  :    
+                        // LED1 on, other off
+                        prcd_led1(); PORTD = decode_str((PID_cfg.PWM&0x0F00)>>8) | 0x10; break;
+                    case 2  :
+                        prcd_led2(); PORTD = decode_str((PID_cfg.PWM&0x00F0)>>4) | 0x10; break;    // suppress dot 0x10
+                    case 3  :
+                        prcd_led3(); PORTD = decode_str(PID_cfg.PWM&0x000F) | 0x10; break;
+                    case 4  :
+                        prcd_led4(); PORTD = 0x44 | 0x10; break;    //"P"
+                    case 5  :
+                        prcd_led5(); PORTD = 0xA0 | 0x10; break;    //"Y"
+                    case 6  :
+                        prcd_led6(); PORTD = 0xE0 | 0x10; break;    //"?"
+                    default: break;
+                }
+          }
+            else
+                led_state = 0;
+    
+       led_state++;        
+    }
+    else if (calibration_info == 1)
     {
         if(led_state < 7)
         {
@@ -432,7 +477,7 @@ int decode_str(int str)
     else if(str == 0x7)         dec_str = 0xC2;
     else if(str == 0x8)         dec_str = 0x00;
     else if(str == 0x9)         dec_str = 0x80;
-    else if(str == 0xA)         dec_str = 0xB0;
+    else if(str == 0xA)         dec_str = 0x40;
     else if(str == 0xB)         dec_str = 0x21;
     else if(str == 0xC)         dec_str = 0x07;
     else if(str == 0xD)         dec_str = 0x28;
@@ -509,6 +554,14 @@ void prcd_but(void)
 				if(norm_num >= 71)
 						norm_num = 70;
 			}
+            if(manpwm_info)
+            {   
+                if(PID_cfg.PWM < 255)
+                    PID_cfg.PWM++;
+                else
+                    PID_cfg.PWM = 255;
+                PID_cfg.PWM_rdy = 1;
+            }
 		}
 		prev_UP = fUP;
 /*-----------------------------------------------------------------------*/
@@ -523,6 +576,11 @@ void prcd_but(void)
 				else
 					norm_num--;
 			}
+            if(manpwm_info)
+            {
+                PID_cfg.PWM--;
+                PID_cfg.PWM_rdy = 1;
+            }
 		}
 		prev_DOWN = fDOWN;
 	
@@ -584,10 +642,39 @@ void prcd_but(void)
 		}
             prev_AUTO = fAUTO;
 /*-----------------------------------------------------------------------*/
+        if(!fMAN & !MAN_forbid)
+        {
+            man_cnt++;
+            manpwm_info_prev = 0b0;
+        }
+        else
+            man_cnt = 0;
+        if(man_cnt == 3000)
+        {
+            MAN_btn_hold = 0b1;
+            MAN_rlsd     = 0b0;
+            man_cnt      = 0;
+        }
+        if(MAN_btn_hold)
+        {
+            MAN_btn_hold = 0b0;
+            manpwm_info_prev = manpwm_info;
+            manpwm_info = !manpwm_info;
+            man_cnt = 0;
+        }
+        if(!MAN_rlsd)
+            MAN_forbid = 0b1;
+        else
+            MAN_forbid = 0b0;
+            
 		if(fMAN > prev_MAN)
 		{
-			mode_MAN = !mode_MAN;
-			mode_AUTO = 0;
+            if(!manpwm_info & !calibration_info)
+            {
+    			mode_MAN = !mode_MAN;
+        		mode_AUTO = 0;
+            }
+            MAN_rlsd = 0b1;
 		}
 		prev_MAN = fMAN;
     }
@@ -819,9 +906,9 @@ void get_settings(void)
 
 void set_PWM(void)
 {
-    if(((mass_locked && mode_AUTO) || mode_MAN)&&PWR_ON)
+    if(((mass_locked && mode_AUTO) || mode_MAN || manpwm_info)&&PWR_ON)
     {
-        if(PID_cfg.PWM_rdy && PID_timer >= 32)
+        if(PID_cfg.PWM_rdy)// && PID_timer >= PID_period)
         {
         TRISCbits.RC2 = 0;                          // set PWM output
         CCP1CONbits.DC1B = 0b11;                    // 2 LSB of CCP1 reg = 3, so we have 8 bit DUTY_CYCLE resolution  

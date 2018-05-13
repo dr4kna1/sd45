@@ -54,23 +54,23 @@ void main(void)
         prcd_but();                                     // get buttons state
         if(PWR_ON)
         {
-            measure();                                      // calculate flow based on feedback
-            if(f_measured == 1)                             // flow calculated
-                arr_num = binarySearch(arr_p,RESLT,767,0);  // set digit display with flow value
-            else
-            if(f_measured == 0 && ACTV == 2)                // flow measure timed-out/no signal from sensor
-                arr_num = 767;                              // null flow
+            arr_num = binarySearch(arr_p,RESLT,767,0);      // get decimal flow via table
             if(mode_SET)                                    // write chosen flow rate to ROM
             {
                 if(norm_num != prev_norm_num)
-                    ROM_WR(0x10,norm_num);
+                    ROM_WR(0X10,norm_num);
             }
             Set_Flow = set_Q[norm_num];
             if((mass_locked && mode_AUTO) || mode_MAN)
-                pid_task(RESLT,Set_Flow,&PID_cfg);
+            {
+                if(!manpwm_info)
+                    pid_task(RESLT,Set_Flow,&PID_cfg);
+                else
+                    pid_reset(&PID_cfg);
+            }
             else
             {
-                pid_reset(&PID_cfg);
+                RESLT = 2840238;
             }
             prev_norm_num = norm_num;
             lit_led(norm_arr[norm_num],rate_arr[arr_num],adc_conv_cnt);
@@ -110,9 +110,4 @@ void interrupt sys_irq (void)
   {
      irq_tmr1();
   }
-  else if (PIR1bits.SSPIF)
-  {
-      PIR1bits.SSPIF = 0;
-  }
-
 }
