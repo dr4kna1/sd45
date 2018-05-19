@@ -117,3 +117,7 @@ unsigned int   time_cnt = 0;
 unsigned long  flow_acc;
 unsigned long  prev_flow_acc;
 unsigned long  pulse_cnt;
+float          current_expend;
+long           current_expend_cast;
+unsigned int   expend_cnt = 0;
+unsigned char  expend_info = 0;

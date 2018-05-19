@@ -268,7 +268,15 @@ void prcd_but(void)
 			service_info = !service_info;
 			service_cnt=0;
 		}
-		
+/*-----------------------------------------------------------------------*/
+        if (!fUP)
+            expend_cnt += 1;
+        if (expend_cnt == 1500)
+		{
+			expend_info = !expend_info;
+			expend_cnt=0;
+		}
+/*-----------------------------------------------------------------------*/
 		indUP = !fUP;
 		if(fUP > prev_UP)
 		{
@@ -536,6 +544,16 @@ void meter_task(void)
         {
             ROM_32WR(FLOW_ACC_ADR,flow_acc);
             prev_flow_acc = flow_acc;
+            if (expend_info)
+            {
+                current_expend = flow_acc * 11.35;
+                if (current_expend > 10000 && current_expend < 1000000)
+                    current_expend_cast = (long)(current_expend/10000);
+                else if (current_expend >= 1000000 && current_expend < 1000000000)
+                    current_expend_cast = (long)(current_expend/1000000);
+                else if (current_expend >= 1000000000 && current_expend < 9990000000)
+                    current_expend_cast = (long)(current_expend/1000000000);
+            }
         }
     }
 }
