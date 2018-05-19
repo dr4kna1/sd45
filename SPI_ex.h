@@ -15,7 +15,7 @@
 
 //======================= прототипы функций ===========================
 
-void initSPI(void);
+void spi_init(void);
 unsigned char writeSPI(unsigned char data);
 unsigned char readSPI(void);
 unsigned long  readDataReg(void);

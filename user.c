@@ -22,26 +22,11 @@
 #include "tables.h"
 #include "SPI_ex.h"
 #include "PID.h"
+#include "display_7seg.h"
 
 unsigned int i=0;
 unsigned int j = 1;
 unsigned char ki = 0;
-//int k = 0;                              // cntr index
-int i1 = 0;                               // buttons delay cntrs
-int i2 = 0;
-int i3 = 0;
-int i4 = 0;
-int i5 = 0;
-extern char mode_MAN;
-extern char mode_AUTO;
-extern char mode_SET;
-
-extern int mes_num ;
-extern char ACTV;
-
-unsigned int string = 0x0;
-unsigned int dig_i = 0;
-unsigned char flash = 0;
 unsigned int norma_10b = 916;
 unsigned int norma_8b = 228;
 
@@ -71,7 +56,7 @@ unsigned char pwm_state = 0;
 /* User Functions                                                             */
 /******************************************************************************/
 
-void InitApp(void)
+void mcu_init(void)
 {
     OSCCONbits.IRCF = _PRESC;            // 8 MHz INTOSC
     PORTA = 0x00;
@@ -95,7 +80,6 @@ void InitApp(void)
     INTCON2 = 0b00000000;
     INTCONbits.GIEH = 1;	// 1- enable all unmasked intr
     INTCONbits.GIEL = 1;	// 1 - enable peripheral intr
-    INTCONbits.TMR0IE = 0;      // TMR0 intr
 
     INTCONbits.TMR0IE = 0;      // irq TMR0
     PIE1bits.TMR1IE = 0;
@@ -106,7 +90,11 @@ void InitApp(void)
     /* TIMER0 */
     T0CONbits.T08BIT = 0;       // 0 - 16 bit mode; 1 - 8 bit
     T0CONbits.T0CS	= 0;    //1 = Transition on T0CKI pin; 0 = Internal instruction cycle clock (CLKO)
-    T0CON = 0x00; // prescaler on, tmr0 off, prescale ratio 1:2
+    // prescaler on, tmr0 off, prescale ratio 1:256
+    T0CONbits.PSA    = 0;
+    T0CONbits.T0PS2  = 1;
+    T0CONbits.T0PS1  = 1;
+    T0CONbits.T0PS0  = 1;
     T0CONbits.TMR0ON = 0;
 
     /* TIMER1 */
@@ -135,6 +123,15 @@ void InitApp(void)
 
 }
 
+// tmr0 operates on Fsys/(4*256), so 48765 ticks equal to 6 seconds
+void irq_tmr0(void)
+{
+    INTCONbits.T0IF = 0;
+    TMR0H = 0x41;           // reinit tmr 0
+    TMR0L = 0x82;
+    time_cnt++;
+}
+
 /* TMR3 full cycle triggered */
 void irq_tmr3(void)
 {
@@ -153,6 +150,7 @@ void irq_ccp2(void)
     //disable irqs
     PIE2bits.TMR3IE = 0;
     PIE2bits.CCP2IE = 0;
+    flow_acc++;
 #if decimate_msre == 1
     if(tmr_counting == 0)
     {
@@ -210,34 +208,6 @@ void irq_tmr1()
    fSET = SET;
 }
 
-void measure(void)
-{
-    if(mes_num == measure_num)
-        {
-        int k = 0;
-        // disable irqs, as we don't need new data in PER1
-            PIE2bits.TMR3IE = 0;
-            PIE2bits.CCP2IE = 0;
-            f_measured = 1;
-            ACTV = 0;
-            PER2 = sumarr(PER1);
-            PER2 = PER2>>grade;             // divide by grade
-            RESLT = PER2;
-            if(RESLT < 173821)
-                RESLT = 173821;
-            k = 0;
-             while(k < 8)                 // reset buffer per1
-            {
-                PER1[k] = 0;
-                k++;
-            }
-            mes_num = 0;                // end measurment session
-            // return back irqs
-            PIE2bits.TMR3IE = 1;
-            PIE2bits.CCP2IE = 1;
-        }
-}
-
 unsigned long sumarr(unsigned long arr[])
 {
     int k = 0;
@@ -249,246 +219,6 @@ unsigned long sumarr(unsigned long arr[])
     return rslt;
 }
 
-/* Trailing one through anodes port*/
-void prcd_led1(void)
-{
-     AN0 = 1; AN1 = 0; AN2 = 0; AN3 = 0; AN4 = 0; AN5 = 0;
-}
-void prcd_led2(void)
-{
-     AN0 = 0; AN1 = 1; AN2 = 0; AN3 = 0; AN4 = 0; AN5 = 0;
-}
-void prcd_led3(void)
-{
-     AN0 = 0; AN1 = 0; AN2 = 1; AN3 = 0; AN4 = 0; AN5 = 0;
-}
-void prcd_led4(void)
-{
-     AN0 = 0; AN1 = 0; AN2 = 0; AN3 = 1; AN4 = 0; AN5 = 0;
-}
-void prcd_led5(void)
-{
-     AN0 = 0; AN1 = 0; AN2 = 0; AN3 = 0; AN4 = 1; AN5 = 0;
-}
-void prcd_led6(void)
-{
-     AN0 = 0; AN1 = 0; AN2 = 0; AN3 = 0; AN4 = 0; AN5 = 1;
-}
-
-/* Consequentially light up 7-seg LEDs;
- * input:
- * str1 - desired chosen flow rate,
- * str2 - measured flow rate from sensor  */
-#if PCB_rev == 0
-void lit_led(unsigned int str1,unsigned int str2)
-{
-    int nstr;
-    // light up modes LEDs
-    indAUTO     = mode_AUTO;
-    indMANUAL   = mode_MAN;
-    indSET      = mode_SET;
-
-    // 7-seg LEDs
-    if(led_state < 7)
-        {
-            PORTD = 0xFF;
-            switch (led_state)
-            {
-                case 1  :    
-                    // LED1 on, other off
-                    if (service_info)
-                    {
-                        prcd_led1();
-                        nstr = (str2&0x0F00)>>8;
-                        PORTD = decode_str(nstr); break;                                          // lit '1'
-                    }
-                    else
-                        break;
-                case 2  :
-                    if (service_info)
-                    {
-                        prcd_led2(); PORTD = decode_str((str2&0x00F0)>>4); break;
-                    }
-                    else
-                        break;
-                case 3  :
-                    if (service_info)
-                    {
-                        prcd_led3(); PORTD = decode_str(str2&0x000F); break;
-                    }
-                    else
-                        break;
-                case 4  :
-                    prcd_led4(); PORTD = decode_str((str1&0x0F00)>>8); break;
-                case 5  :
-                    prcd_led5(); PORTD = decode_str((str1&0x00F0)>>4); break;
-                case 6  :
-                    prcd_led6(); PORTD = decode_str(str1&0x000F); break;
-                default: break;
-            }
-        }
-        else
-            led_state = 0;
-    
-       led_state++;
-}
-#elif PCB_rev == 1
-void lit_led(unsigned int str1,unsigned int str2, unsigned int adc_cnt)
-{
-    int nstr;
-    // light up modes LEDs
-    indAUTO     = mode_AUTO;
-    indMANUAL   = mode_MAN;
-    indSET      = mode_SET;
-    
-    if(calibration_info == 0 & manpwm_info == 0)
-    {
-        // 7-seg LEDs
-        if(led_state < 7)
-          {
-              PORTD = 0xFF;
-              switch (led_state)
-                {
-                    case 1  :    
-                        // LED1 on, other off
-                        if (service_info)
-                        {
-                            prcd_led1();
-                            nstr = (str2&0x0F00)>>8;
-                            PORTD = decode_str(nstr); break;                                          // lit '1'
-                        }
-                        else
-                            break;
-                    case 2  :
-                        if (service_info)
-                        {
-                            prcd_led2(); PORTD = decode_str((str2&0x00F0)>>4) | 0x10; break;    // suppress dot 0x10
-                        }
-                        else
-                            break;
-                    case 3  :
-                        if (service_info)
-                        {
-                            prcd_led3(); PORTD = decode_str(str2&0x000F) | 0x10; break;
-                        }
-                        else
-                            break;
-                    case 4  :
-                        prcd_led4(); PORTD = decode_str((str1&0x0F00)>>8); break;
-                    case 5  :
-                        prcd_led5(); PORTD = decode_str((str1&0x00F0)>>4) | 0x10; break;
-                    case 6  :
-                        prcd_led6(); PORTD = decode_str(str1&0x000F) | 0x10; break;
-                    default: break;
-                }
-          }
-            else
-                led_state = 0;
-    
-       led_state++;
-    }
-    else if (calibration_info == 0 & manpwm_info == 1)  // Manual PWM
-    {
-        // 7-seg LEDs
-        if(led_state < 7)
-          {
-              PORTD = 0xFF;
-              switch (led_state)
-                {
-                    case 1  :    
-                        // LED1 on, other off
-                        prcd_led1(); PORTD = decode_str((PID_cfg.PWM&0x0F00)>>8) | 0x10; break;
-                    case 2  :
-                        prcd_led2(); PORTD = decode_str((PID_cfg.PWM&0x00F0)>>4) | 0x10; break;    // suppress dot 0x10
-                    case 3  :
-                        prcd_led3(); PORTD = decode_str(PID_cfg.PWM&0x000F) | 0x10; break;
-                    case 4  :
-                        prcd_led4(); PORTD = 0x44 | 0x10; break;    //"P"
-                    case 5  :
-                        prcd_led5(); PORTD = 0xA0 | 0x10; break;    //"Y"
-                    case 6  :
-                        prcd_led6(); PORTD = 0xE0 | 0x10; break;    //"?"
-                    default: break;
-                }
-          }
-            else
-                led_state = 0;
-    
-       led_state++;        
-    }
-    else if (calibration_info == 1)
-    {
-        if(led_state < 7)
-        {
-            PORTD = 0xFF;
-            switch (led_state)
-            {
-                case 1  :    
-                // LED1 on, other off
-                        prcd_led1(); PORTD = decode_str((arr_hexdec_p[adc_cnt]&0x0F00)>>8) | 0x10; break;
-                    case 2  :
-                        prcd_led2(); PORTD = decode_str((arr_hexdec_p[adc_cnt]&0x00F0)>>4) | 0x10; break;
-                    case 3  :
-                        prcd_led3(); PORTD = decode_str((arr_hexdec_p[adc_cnt]&0x000F)) | 0x10; break;
-                    case 4  :
-                        prcd_led4(); PORTD = 0x07 | 0x10; break; // display 'C'
-                    case 5  :
-                        prcd_led5(); PORTD = 0x27 | 0x10; break;
-                    case 6  :
-                        prcd_led6(); PORTD = 0x21 | 0x10; break;
-                    default: break;
-                }
-          }
-            else
-                led_state = 0;
-    
-       led_state++;
-    }
-}
-#endif
-
-/* Decode hex int to 7-seg digit*/
-int decode_str(int str)
-{
-#if PCB_rev == 0
-    int dec_str = 0xDF;
-    if     (str == 0x0)         dec_str = 0x20;
-    else if(str == 0x1)         dec_str = 0x79;
-    else if(str == 0x2)         dec_str = 0x44;
-    else if(str == 0x3)         dec_str = 0x50;
-    else if(str == 0x4)         dec_str = 0x19;
-    else if(str == 0x5)         dec_str = 0x12;
-    else if(str == 0x6)         dec_str = 0x02;
-    else if(str == 0x7)         dec_str = 0x38;
-    else if(str == 0x8)         dec_str = 0x00;
-    else if(str == 0x9)         dec_str = 0x10;
-    else
-         dec_str = 0xDF;
-    return dec_str;
-#elif PCB_rev == 1
-    int dec_str = 0xFD;
-    if     (str == 0x0)         dec_str = 0x02;
-    else if(str == 0x1)         dec_str = 0xFA;
-    else if(str == 0x2)         dec_str = 0x0C;
-    else if(str == 0x3)         dec_str = 0x88;
-    else if(str == 0x4)         dec_str = 0xE0;
-    else if(str == 0x5)         dec_str = 0x81;
-    else if(str == 0x6)         dec_str = 0x01;
-    else if(str == 0x7)         dec_str = 0xC2;
-    else if(str == 0x8)         dec_str = 0x00;
-    else if(str == 0x9)         dec_str = 0x80;
-    else if(str == 0xA)         dec_str = 0x40;
-    else if(str == 0xB)         dec_str = 0x21;
-    else if(str == 0xC)         dec_str = 0x07;
-    else if(str == 0xD)         dec_str = 0x28;
-    else if(str == 0xE)         dec_str = 0x05;
-    else if(str == 0xF)         dec_str = 0x45; //0x45;
-    else if(str == 0x10)        dec_str = 0x27; // symbol 'L'
-    else
-         dec_str = 0xFD;
-    return dec_str;    
-#endif
-}
 
 int binarySearch(unsigned long *tab1, unsigned long key, int high, int low)
 {
@@ -514,23 +244,18 @@ int binarySearch(unsigned long *tab1, unsigned long key, int high, int low)
 				return low;
 		else
 			low = middle;
-
 	}
 	return -1;
 }
 
 void prcd_but(void)
 {
-
-    const int ps = 200;
-    const int ts = 200;
-
     fAUTO = AUTO;
     fDOWN = DOWN;
     fMAN  = MANUAL;
     fUP   = UP;
     fSET  = SET;
-    
+
     pwron_task();
     if(PWR_ON)
     {
@@ -681,140 +406,6 @@ void prcd_but(void)
 
 }
 
-#if PWM_capacity == 8
-void drive_pump( unsigned int *num,  unsigned long *table)
-{
-    const unsigned char ps = 1;//60;
-    
- // drive pump if mass present or manual guidance
-    if(((mass_locked && mode_AUTO) || mode_MAN)&&PWR_ON)
-    {
-        TRISCbits.RC2 = 0;                          // set PWM output
-        CCP1CONbits.DC1B = 0b11;                    // 2 LSB of CCP1 reg = 3, so we have 8 bit DUTY_CYCLE resolution  
-            PR2 = 0xFF;                                 // max tmr2 period (485HZ @ 8MHz)
-        T2CONbits.TMR2ON = 1;                       // start tmr2
-        CCP1CONbits.CCP1M = 0xF;                    // enable PWM on CCP1
-
-        if(pwm_state == 0)                          // if new norm_rate set
-        {
-            norma_8b = num[norm_num];               // then borrowing DUTY_CYCLE from table
-            CCPR1L = norma_8b;
-            pwm_state = 1;                          // next DC from compare RESLT and table per_pwm_arr
-        }
-        else if(pwm_state == 1)
-        {
-            if(RESLT >= table[0])                   // measured flow rate smaller than lowest selected rate
-            {
-                pwm_state = 0;
-                norma_8b = num[norm_num];
-                CCPR1L = norma_8b;
-            }
-            if(f_measured == 1)
-            {
-                f_measured = 0;
-                if(RESLT > table[norm_num])
-                {
-                    ki++;
-                    if(ki == ps)
-                    {
-                        norma_8b = norma_8b - 1;
-                        if(norma_8b <= 2)   //if(norma_8b <= 10)
-                            norma_8b = 2;  //norma_8b = 10;
-                        CCPR1L = norma_8b;
-                        ki = 0;
-                    }
-                }
-                else if(RESLT < table[norm_num] )
-                {
-                    ki++;
-                    if(ki == ps)
-                    {
-                        norma_8b = norma_8b + 1;
-                        if(norma_8b > 231)
-                            norma_8b = 231;
-                        CCPR1L = norma_8b;
-                        ki = 0;
-                    }
-                }
-            }
-        }
-    }
-    else
-    {
-        disable_pump();
-    }
-}
-#elif PWM_capacity == 10
-void drive_pump( unsigned int *num,  unsigned long *table)
-{
-    const unsigned char ps = 1;//60;
-
-    if(mode_AUTO || mode_MAN)
-    {
-        TRISCbits.RC2 = 0;                          // set PWM output
-        CCP1CONbits.DC1B = 0b11;                    // 2 LSB of CCP1 reg = 3, so we have 8 bit DUTY_CYCLE resolution
-        PR2 = 0xFF;                                 // max tmr2 period (485HZ @ 8MHz)
-        T2CONbits.TMR2ON = 1;                       // start tmr2
-        CCP1CONbits.CCP1M = 0xF;                    // enable PWM on CCP1
-
-        if(pwm_state == 0)                          // if new norm_rate set
-        {
-            norma_10b = num[norm_num];
-            CCP1CONbits.DC1B = norma_10b & 0b11;    // Set LSb[1:0] of PWM DUTY_CYCLE by masking 2 lower bits of table value
-            CCPR1L = norma_10b>>2;                  // then set MSb[9:2] of DUTY_CYCLE from table
-            pwm_state = 1;                          // next DC from compare RESLT and table per_pwm_arr
-        }
-        else if(pwm_state == 1)
-        {
-            if(RESLT >= table[0])
-            {
-                pwm_state = 0;
-                norma_10b = num[norm_num];
-                CCP1CONbits.DC1B = norma_10b & 0b11;
-                CCPR1L = norma_10b>>2;
-            }
-            if(f_measured == 1)
-            {
-                  f_measured = 0;
-                if(RESLT > table[norm_num])
-                {
-                    ki++;
-                    if(ki == ps)
-                    {
-                        norma_10b--;
-                        if(norma_10b <= 200)
-                            norma_10b = 200;
-                        CCP1CONbits.DC1B = norma_10b & 0b11;
-                        CCPR1L = norma_10b>>2;
-                        ki = 0;
-                    }
-                }
-                else if(RESLT < table[norm_num] )   // measured period smaller => flow grater then desired
-                {
-                    ki++;
-                    if(ki == ps)
-                    {
-                        norma_10b++;
-                        if(norma_10b > 920)
-                            norma_10b = 920;
-                        CCP1CONbits.DC1B = norma_10b & 0b11;
-                        CCPR1L = norma_10b>>2;
-                        ki = 0;
-                    }
-                }
-            }
-        }
-    }
-    else
-    {
-        TRISCbits.RC2 = 1;          // set PWM as input to disable pin
-        CCP1CONbits.CCP1M = 0x0;    // disable PWM module
-        T2CONbits.TMR2ON = 0;
-        pwm_state = 0;
-    }
-}
-#endif
-
 void ROM_WR(unsigned int adr, unsigned int data)
 {
     unsigned char INTCON_SAVE;
@@ -842,6 +433,14 @@ void ROM_WR(unsigned int adr, unsigned int data)
     EECON1bits.WREN=0;                  // Disable writes to EEPROM on write complete (EEIF flag on set PIR2 )
     PIR2bits.EEIF=0;                 //Clear EEPROM write complete flag. (must be cleared in software. So we do it here)
 
+}
+
+void ROM_32WR(unsigned int adr, unsigned long data)
+{
+    ROM_WR(adr,     (0xFF000000 & data) >> 24);
+    ROM_WR(adr + 1, (0x00FF0000 & data) >> 16);
+    ROM_WR(adr + 2, (0x0000FF00 & data) >> 8);
+    ROM_WR(adr + 3, (0x000000FF & data));
 }
 
 unsigned char ROM_RD(unsigned char adr)
@@ -890,7 +489,7 @@ void get_settings(void)
     else
         ADC_err = 1;
     // retrieve set flow rate if any
-    norm_num = ROM_RD(0x10);
+    norm_num = ROM_RD(FLOW_RATE_ADR);
     if(norm_num > 71)                                   // check for 1st ROM read
         norm_num = 0x14;
     // get calibration threshold
@@ -902,6 +501,10 @@ void get_settings(void)
         ADC_THR_v = 0x0081B320;                                                 // default threshold
     else
         ADC_THR_v = temp[0]<<24 | temp[1]<<16 | temp[2]<<8 | temp[3];           // previous calibration data
+    for(k = 0; k < 4; k++)                                                      // read out saved expended flow mass
+        temp[k] = ROM_RD(FLOW_ACC_ADR + k);
+    flow_acc = temp[0]<<24 | temp[1]<<16 | temp[2]<<8 | temp[3];
+    prev_flow_acc = flow_acc;
 }
 
 void set_PWM(void)
@@ -915,8 +518,6 @@ void set_PWM(void)
             PR2 = 0xFF;                                 // max tmr2 period (485HZ @ 8MHz)
         T2CONbits.TMR2ON = 1;                       // start tmr2
         CCP1CONbits.CCP1M = 0xF;                    // enable PWM on CCP1
-        
-
             CCPR1L = PID_cfg.PWM;
             PID_timer = 0;
         }
@@ -924,4 +525,17 @@ void set_PWM(void)
     }
     else
         disable_pump();
+}
+
+// Looks after tmr0 and accumulates expended flow
+void meter_task(void)
+{
+    if(!mode_AUTO && !mode_MAN)  // pump not active
+    {
+        if (prev_flow_acc != flow_acc)
+        {
+            ROM_32WR(FLOW_ACC_ADR,flow_acc);
+            prev_flow_acc = flow_acc;
+        }
+    }
 }

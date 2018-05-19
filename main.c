@@ -17,33 +17,21 @@
 #include "user.h"          /* User funct/params, such as InitApp */
 #include "macros.h"
 #include "SPI_ex.h"
-#include "tables.h"        /* calibrated flow, PWM and other tabe values */
+#include "tables.h"        /* calibrated flow, PWM and other tabs values */
 #include "PID.h"
+#include "display_7seg.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 
 /* Main cycle and interrupt routine */
 
-unsigned char fUP = 1;
-unsigned char fDOWN = 1;
-unsigned char fSET = 1;
-unsigned char fMAN = 1;
-unsigned char fAUTO = 1;
-unsigned char f_measured = 0;
-
-
-char mode_MAN = 0;
-char mode_AUTO = 0;
-char mode_SET = 0;
-long Set_Flow = 0;
-
 void main(void)
 {
 //    PWR_ON = 0b1;
     arr_p = (void *)meash_arr;
-    InitApp();
-    initSPI();
+    mcu_init();
+    spi_init();
     pid_init(&PID_cfg, &I_term, &D_term, &P_term);
     get_settings();
     mode_MAN = 0;                                       // Init main control modes
@@ -64,7 +52,7 @@ void main(void)
             if((mass_locked && mode_AUTO) || mode_MAN)
             {
                 if(!manpwm_info)
-                    pid_task(RESLT,Set_Flow,&PID_cfg);
+                    pid_task(RESLT,Set_Flow,&PID_cfg);      // Calculate PWM value
                 else
                     pid_reset(&PID_cfg);
             }
@@ -73,10 +61,9 @@ void main(void)
                 RESLT = 2840238;
             }
             prev_norm_num = norm_num;
-            lit_led(norm_arr[norm_num],rate_arr[arr_num],adc_conv_cnt);
+            lit_led(norm_arr[norm_num],rate_arr[arr_num]);
             ADC_task(&ADC_data);
-            set_PWM();
-        //    drive_pump(pwm_p,per_pwm_p);
+            set_PWM();                                      // drive pump with calculated PWM
         }
         else
         {
@@ -98,16 +85,15 @@ void main(void)
 void interrupt sys_irq (void)
 {
   if (PIR2bits.TMR3IF)
-    {
-        irq_tmr3();                                 // full timer3 cycle
-    }
+  {
+    irq_tmr3();                                 // full timer3 cycle
+  }
   else if (PIR2bits.CCP2IF)
   {
-      irq_ccp2();                                   // timer3 capture with event
-
+    irq_ccp2();                                   // timer3 capture with event
   }
-  else if (PIR1bits.TMR1IF)                         // main timer, drives leds
+  else if (INTCONbits.T0IF)                     // tmr0 overflow
   {
-     irq_tmr1();
+    irq_tmr0();
   }
 }

@@ -4,7 +4,9 @@
 #define ADC_threshold 0x81B320      /* threshold for mass bridge voltage */
 #define PWRON_time    2700          /* time to hold SET button to enable main cycle */
 #define PWROFF_time   54000
+#define FLOW_RATE_ADR 0x10
 #define ADC_THR_ADR   0x20
+#define FLOW_ACC_ADR  0x30
 #define ADC_CONV_TR   63            /* number of sequential ADC ocnversion during calibration */
 #define PID_period    16            /* delayin applying PID regulation [TMR3 periods] */
 #define decimate_msre 1             /* get every second impulse */
@@ -43,46 +45,44 @@
 #else
     #define _tmr3_presc 0              //  1:1
 #endif
-void InitApp(void);                 /* I/O and Peripheral Initialization */
+
+void mcu_init(void);                 /* I/O and Peripheral Initialization */
 void irq_tmr3(void);                /* timer 3 irq handler */
 void irq_tmr1(void);
 void irq_tmr0(void);
 void irq_ccp2(void);
 void irq2_ccp2(void);
-void irq_ioch(void);
-void lit_led(unsigned int str1,unsigned int str2,unsigned int adc_cnt);
-void prcd_led1(void);
-void prcd_led2(void);
-void prcd_led3(void);
-void prcd_led4(void);
-void prcd_led5(void);
-void prcd_led6(void);
 void prcd_but(void);
-void measure(void);
-void measure0(void);
 void pwron_task(void);
 void disable_pump(void);
 void ROM_WR(unsigned int adr, unsigned int data);
+void ROM_32WR(unsigned int adr, unsigned long data);
 unsigned char ROM_RD(unsigned char adr);
-void drive_pump( unsigned int *num,  unsigned long *table);
-int decode_str(int str);
 int binarySearch( unsigned long *tab1, unsigned long key, int high, int low);
 unsigned long sumarr(unsigned long arr[]);
-void InterruptHandlerHigh (void);
 void get_settings(void);
 void set_PWM(void);
+void meter_task(void);
 
 unsigned int norm_num;
-volatile unsigned long PER0 = 0;                     // buffer #1 for active measurment
+
+// buttons state temp vars
+unsigned char fUP = 1;
+unsigned char fDOWN = 1;
+unsigned char fSET = 1;
+unsigned char fMAN = 1;
+unsigned char fAUTO = 1;
+
+char mode_MAN;
+char mode_AUTO;
+char mode_SET;
+volatile unsigned long PER0 = 0;            // buffer #1 for active measurment
 unsigned long PER1[measure_num] = {0};
-unsigned long PER2 = 0;                     // sum of 8 measurments
-volatile unsigned long RESLT = 0;                    // normal result of 8 measures
-char ACTV = 0b0;                            // controller state
+volatile unsigned long RESLT = 0;           // normal result of 8 measures
 int mes_num    = 0;                         // number of measurments
 int arr_num = 767;                          // array index for measured flow table
 unsigned int prev_norm_num = 0;
 unsigned long *arr_p;// = meash_arr;
-unsigned char led_state = 0;
 unsigned char ADCStatus = 0;
 unsigned long ADC_data = 0;
 unsigned char ADC_ID = 0;
@@ -112,3 +112,8 @@ bit            manpwm_info_prev = 0b0;
 volatile unsigned char tmr_counting = 0;
 unsigned int tmr_overflow_evn = 0;
 unsigned int active_evn       = 0;
+long Set_Flow = 0;
+unsigned int   time_cnt = 0;
+unsigned long  flow_acc;
+unsigned long  prev_flow_acc;
+unsigned long  pulse_cnt;

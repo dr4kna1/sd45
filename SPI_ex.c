@@ -15,7 +15,7 @@
 #include "SPI_ex.h"
 #include "user.h"
 
-void initSPI(void)
+void spi_init(void)
 {
 	//************* SSPSTAT *****************
 	
@@ -101,10 +101,11 @@ void ADC_task(unsigned long *ADCData)
             {
                 calibration_act  = 0;
                 ADC_THR_v = cal_acc;
-                ROM_WR(ADC_THR_ADR,(0xFF000000&cal_acc)>>24);
-                ROM_WR(ADC_THR_ADR + 1,(0x00FF0000&cal_acc)>>16);
-                ROM_WR(ADC_THR_ADR + 2,(0x0000FF00&cal_acc)>>8);
-                ROM_WR(ADC_THR_ADR + 3,(0x000000FF&cal_acc));
+                ROM_32WR(ADC_THR_ADR,cal_acc);
+//                ROM_WR(ADC_THR_ADR,(0xFF000000&cal_acc)>>24);
+//                ROM_WR(ADC_THR_ADR + 1,(0x00FF0000&cal_acc)>>16);
+//                ROM_WR(ADC_THR_ADR + 2,(0x0000FF00&cal_acc)>>8);
+//                ROM_WR(ADC_THR_ADR + 3,(0x000000FF&cal_acc));
             }
         }
         if(temp > ADC_THR_v)
