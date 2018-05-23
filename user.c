@@ -269,7 +269,7 @@ void prcd_but(void)
 			service_cnt=0;
 		}
 /*-----------------------------------------------------------------------*/
-        if (!fUP)
+        if (!fUP & !mode_SET)
             expend_cnt += 1;
         if (expend_cnt == 1500)
 		{
@@ -298,6 +298,13 @@ void prcd_but(void)
 		}
 		prev_UP = fUP;
 /*-----------------------------------------------------------------------*/
+        if (!fDOWN & !mode_SET)
+            flwrst_cnt += 1;
+        if (flwrst_cnt == 1500)
+		{
+			flwrst_info = 1;
+			flwrst_cnt=0;
+		}
 		indDOWN = !fDOWN;
 		if(fDOWN > prev_DOWN)
 		{
@@ -537,7 +544,9 @@ void set_PWM(void)
 
 // Looks after tmr0 and accumulates expended flow
 void meter_task(void)
-{
+{   
+    if(flwrst_info)
+        meter_reset();
     if(!mode_AUTO && !mode_MAN)  // pump not active
     {
         if (prev_flow_acc != flow_acc)
@@ -547,13 +556,35 @@ void meter_task(void)
             if (expend_info)
             {
                 current_expend = flow_acc * 11.35;
-                if (current_expend > 10000 && current_expend < 1000000)
+                if (current_expend > 10000 && current_expend < 9999999)
+                {
                     current_expend_cast = (long)(current_expend/10000);
-                else if (current_expend >= 1000000 && current_expend < 1000000000)
+                    dot_pos[2] = 0x0;dot_pos[1] = 0x10;dot_pos[0] = 0x10;
+                }
+                else if (current_expend >= 10000000 && current_expend < 99999999)
+                {
+                    current_expend_cast = (long)(current_expend/100000);
+                    dot_pos[2] = 0x10;dot_pos[1] = 0x0;dot_pos[0] = 0x10;
+                }
+                else if (current_expend >= 100000000 && current_expend < 999999999)
+                {
                     current_expend_cast = (long)(current_expend/1000000);
-                else if (current_expend >= 1000000000 && current_expend < 9990000000)
-                    current_expend_cast = (long)(current_expend/1000000000);
+                    dot_pos[2] = 0x10;dot_pos[1] = 0x10;dot_pos[0] = 0x0;
+                }
+                else
+                {
+                    current_expend_cast = 0;
+                    dot_pos[2] = 0x0;dot_pos[1] = 0x10;dot_pos[0] = 0x10;
+                }
             }
         }
     }
+}
+
+void meter_reset(void)
+{
+    flow_acc = 0;
+    current_expend = 0;
+    current_expend_cast = 0;
+    flwrst_info = 0;
 }

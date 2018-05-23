@@ -64,6 +64,7 @@ void main(void)
             lit_led(norm_arr[norm_num],rate_arr[arr_num]);
             ADC_task(&ADC_data);
             set_PWM();                                      // drive pump with calculated PWM
+            meter_task();
         }
         else
         {
@@ -91,9 +92,5 @@ void interrupt sys_irq (void)
   else if (PIR2bits.CCP2IF)
   {
     irq_ccp2();                                   // timer3 capture with event
-  }
-  else if (INTCONbits.T0IF)                     // tmr0 overflow
-  {
-    irq_tmr0();
   }
 }

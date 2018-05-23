@@ -29,4 +29,5 @@ int decode_str(int str);
 void display_task(void);
 
 unsigned char led_state = 0;
+unsigned int  dot_pos[3] = {0x10,0x10,0x10};
 

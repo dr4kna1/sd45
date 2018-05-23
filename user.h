@@ -63,6 +63,7 @@ unsigned long sumarr(unsigned long arr[]);
 void get_settings(void);
 void set_PWM(void);
 void meter_task(void);
+void meter_reset(void);
 
 unsigned int norm_num;
 
@@ -121,3 +122,5 @@ float          current_expend;
 long           current_expend_cast;
 unsigned int   expend_cnt = 0;
 unsigned char  expend_info = 0;
+unsigned int   flwrst_cnt = 0;
+unsigned char  flwrst_info = 0;

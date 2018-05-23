@@ -134,6 +134,10 @@ void lit_led(unsigned int str1,unsigned int str2)
                             nstr = (str2&0x0F00)>>8;
                             PORTD = decode_str(nstr); break;                                          // lit '1'
                         }
+                        else if (expend_info)
+                        {
+                            prcd_led1(); PORTD = decode_str((flow_hex[current_expend_cast]&0x0F00)>>8) | dot_pos[2]; break;
+                        }
                         else
                             break;
                     case 2  :
@@ -141,12 +145,20 @@ void lit_led(unsigned int str1,unsigned int str2)
                         {
                             prcd_led2(); PORTD = decode_str((str2&0x00F0)>>4) | 0x10; break;    // suppress dot 0x10
                         }
+                        else if (expend_info)
+                        {
+                            prcd_led2(); PORTD = decode_str((flow_hex[current_expend_cast]&0x00F0)>>4) | dot_pos[1]; break;
+                        }
                         else
                             break;
                     case 3  :
                         if (service_info)
                         {
                             prcd_led3(); PORTD = decode_str(str2&0x000F) | 0x10; break;
+                        }
+                        else if (expend_info)
+                        {
+                            prcd_led3(); PORTD = decode_str(flow_hex[current_expend_cast]&0x000F) | dot_pos[0]; break;
                         }
                         else
                             break;
@@ -245,7 +257,7 @@ int decode_str(int str)
 #elif PCB_rev == 1
     int dec_str = 0xFD;
     if     (str == 0x0)         dec_str = 0x02;
-    else if(str == 0x1)         dec_str = 0xFA;
+    else if(str == 0x1)         dec_str = 0xEA;
     else if(str == 0x2)         dec_str = 0x0C;
     else if(str == 0x3)         dec_str = 0x88;
     else if(str == 0x4)         dec_str = 0xE0;
